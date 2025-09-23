@@ -12,8 +12,22 @@ import AnalyticsSection from "@/components/dashboard/analytics-section";
 export default function Dashboard() {
   const { user } = useAuth();
   
-  if (!user) return null;
+    if (!user) return null;
 
+    // Route to dedicated dashboard pages
+    if (user.role === "worker") {
+      window.location.replace("/worker-dashboard");
+      return null;
+    }
+    if (user.role === "supervisor") {
+      window.location.replace("/supervisor-dashboard");
+      return null;
+    }
+    if (user.role === "admin") {
+      window.location.replace("/admin-dashboard");
+      return null;
+    }
+    return null;
   return (
     <div className="flex h-screen overflow-hidden bg-background" data-testid="dashboard">
       <Sidebar user={user} />

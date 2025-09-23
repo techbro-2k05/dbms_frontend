@@ -15,12 +15,16 @@ import {
   User as UserIcon
 } from "lucide-react";
 
+
 interface SidebarProps {
-  user: User;
+  user: User | null;
 }
 
 export default function Sidebar({ user }: SidebarProps) {
   const { logoutMutation } = useAuth();
+  if (!user) {
+    return null;
+  }
 
   const navigation = [
     { name: "Dashboard", icon: LayoutDashboard, href: "#", current: true },

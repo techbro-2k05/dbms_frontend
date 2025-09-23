@@ -8,12 +8,18 @@ import { ProtectedRoute } from "./lib/protected-route";
 import Dashboard from "@/pages/dashboard";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
+import WorkerDashboard from "@/pages/worker-dashboard";
+import SupervisorDashboard from "@/pages/supervisor-dashboard";
+import AdminDashboard from "@/pages/admin-dashboard";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={() => <Dashboard />} />
       <Route path="/auth" component={AuthPage} />
+  <Route path="/worker-dashboard" component={WorkerDashboard} />
+  <Route path="/supervisor-dashboard" component={SupervisorDashboard} />
+  <Route path="/admin-dashboard" component={AdminDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -8,7 +8,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
-  role: text("role").notNull().default("normal"), // "admin" or "normal"
+  role: text("role").notNull().default("worker"), // "worker", "supervisor", "admin"
   department: text("department"),
   position: text("position"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -55,6 +55,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 }).extend({
   password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["worker", "supervisor", "admin"]),
 });
 
 export const insertShiftSchema = createInsertSchema(shifts).omit({

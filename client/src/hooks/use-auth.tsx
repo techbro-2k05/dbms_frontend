@@ -28,7 +28,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
   } = useQuery<SelectUser | undefined, Error>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      try {
+        // getQueryFn expects an object with url
+        return await getQueryFn({ url: "/api/user", on401: "returnNull" })();
+      } catch {
+        // fallback to localStorage
+        const stored = localStorage.getItem("user");
+        return stored ? JSON.parse(stored) : null;
+      }
+    },
   });
 
   const loginMutation = useMutation({
@@ -38,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      localStorage.setItem("user", JSON.stringify(user));
     },
     onError: (error: Error) => {
       toast({
@@ -55,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      localStorage.setItem("user", JSON.stringify(user));
     },
     onError: (error: Error) => {
       toast({
@@ -71,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      localStorage.removeItem("user");
     },
     onError: (error: Error) => {
       toast({

@@ -19,8 +19,14 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-const registerSchema = insertUserSchema.extend({
+const registerSchema = z.object({
+  name: z.string().min(1, "Full name is required"),
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Password confirmation is required"),
+  role: z.enum(["worker", "supervisor", "admin"]),
+  department: z.string().optional().nullable(),
+  position: z.string().optional().nullable(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -44,11 +50,11 @@ export default function AuthPage() {
   const registerForm = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: "",
       username: "",
       password: "",
       confirmPassword: "",
-      name: "",
-      role: "normal",
+      role: "worker",
       department: "",
       position: "",
     },
@@ -158,6 +164,28 @@ export default function AuthPage() {
                 <CardContent>
                   <Form {...registerForm}>
                     <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4" data-testid="register-form">
+                    <FormField
+                      control={registerForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Designation</FormLabel>
+                          <FormControl>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || "worker"}>
+                              <SelectTrigger data-testid="select-role">
+                                <SelectValue placeholder="Select designation" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="worker">Worker</SelectItem>
+                                <SelectItem value="supervisor">Supervisor</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                       <FormField
                         control={registerForm.control}
                         name="name"
