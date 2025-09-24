@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Bell } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function DashboardHeader() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -48,9 +49,28 @@ export default function DashboardHeader() {
             <Clock className="w-4 h-4" />
             <span data-testid="current-time">{formatTime(currentTime)}</span>
           </div>
-          <Button variant="ghost" size="sm" data-testid="button-notifications">
-            <Bell className="w-4 h-4" />
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" data-testid="button-notifications">
+                <Bell className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Notifications</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-sm font-medium">No new notifications.</p>
+                  <ul className="mt-2 space-y-2">
+                    <li className="text-xs text-muted-foreground">[Placeholder] Your shift starts at 9:00 AM tomorrow.</li>
+                    <li className="text-xs text-muted-foreground">[Placeholder] Overtime request approved.</li>
+                    <li className="text-xs text-muted-foreground">[Placeholder] Factory maintenance scheduled for Friday.</li>
+                  </ul>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </header>

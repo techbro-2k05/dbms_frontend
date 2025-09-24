@@ -8,9 +8,9 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
-  role: text("role").notNull().default("worker"), // "worker", "supervisor", "admin"
-  department: text("department"),
-  position: text("position"),
+  type: text("type").notNull().default("worker"), // "worker", "supervisor", "admin"
+  location: text("location"),
+  role: text("position"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -20,7 +20,7 @@ export const shifts = pgTable("shifts", {
   description: text("description"),
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
-  department: text("department").notNull(),
+  location: text("location").notNull(),
   assignedUserId: varchar("assigned_user_id").references(() => users.id),
   status: text("status").notNull().default("scheduled"), // "scheduled", "active", "completed", "cancelled"
   createdAt: timestamp("created_at").defaultNow(),
@@ -55,7 +55,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 }).extend({
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["worker", "supervisor", "admin"]),
+  type: z.enum(["worker", "supervisor", "admin"]),
 });
 
 export const insertShiftSchema = createInsertSchema(shifts).omit({

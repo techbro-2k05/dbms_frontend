@@ -9,7 +9,7 @@ import AttendanceOverview from "@/components/dashboard/attendance-overview";
 
 export default function WorkerDashboard() {
   const { user } = useAuth();
-  if (!user || user.role !== "worker") return null;
+  if (!user || user.type !== "worker") return null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background" data-testid="dashboard-worker">
@@ -24,7 +24,7 @@ export default function WorkerDashboard() {
               <LeaveRequestsSection /> {/* Leave and overtime requests */}
             </div>
             <div className="space-y-6">
-              <QuickActions /> {/* Request leave/overtime, clock in/out */}
+              <QuickActions /> {/* Request leave/overtime, clock in/out, view schedule */}
               <AttendanceOverview /> {/* Wage display for week, attendance */}
             </div>
           </div>

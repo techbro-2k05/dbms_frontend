@@ -3,14 +3,15 @@ import Sidebar from "@/components/dashboard/sidebar";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import StatsCards from "@/components/dashboard/stats-cards";
 import AnalyticsSection from "@/components/dashboard/analytics-section";
-import LeaveRequestsSection from "@/components/dashboard/leave-requests-section";
+import NewShiftForm from "@/components/dashboard/new-shift-form";
+import AdminUserManagement from "@/components/dashboard/admin-user-management";
 import CalendarWidget from "@/components/dashboard/calendar-widget";
 import AttendanceOverview from "@/components/dashboard/attendance-overview";
 // TODO: Create AdminUserManagement component for user directory and location management
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  if (!user || user.role !== "admin") return null;
+  if (!user || user.type !== "admin") return null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background" data-testid="dashboard-admin">
@@ -22,7 +23,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
             <div className="lg:col-span-2 space-y-6">
               <AnalyticsSection /> {/* Location schedules, analytics */}
-              <LeaveRequestsSection /> {/* All leave/overtime requests */}
+              <NewShiftForm /> {/* New shift allocation for admin */}
               {/* <AdminUserManagement /> */}
             </div>
             <div className="space-y-6">

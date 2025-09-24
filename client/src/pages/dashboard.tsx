@@ -15,15 +15,15 @@ export default function Dashboard() {
     if (!user) return null;
 
     // Route to dedicated dashboard pages
-    if (user.role === "worker") {
+  if (user.type === "worker") {
       window.location.replace("/worker-dashboard");
       return null;
     }
-    if (user.role === "supervisor") {
+  if (user.type === "supervisor") {
       window.location.replace("/supervisor-dashboard");
       return null;
     }
-    if (user.role === "admin") {
+  if (user.type === "admin") {
       window.location.replace("/admin-dashboard");
       return null;
     }
@@ -53,7 +53,7 @@ export default function Dashboard() {
             </div>
           </div>
           
-          {user.role === "admin" && (
+          {user.type === "admin" && (
             <div className="mt-8">
               <AnalyticsSection />
             </div>

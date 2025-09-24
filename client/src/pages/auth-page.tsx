@@ -24,9 +24,9 @@ const registerSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Password confirmation is required"),
-  role: z.enum(["worker", "supervisor", "admin"]),
-  department: z.string().optional().nullable(),
-  position: z.string().optional().nullable(),
+    type: z.enum(["worker", "supervisor", "admin"]),
+  location: z.string().optional().nullable(),
+    role: z.string().optional().nullable(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -54,9 +54,9 @@ export default function AuthPage() {
       username: "",
       password: "",
       confirmPassword: "",
-      role: "worker",
-      department: "",
-      position: "",
+       type: "worker",
+  location: "",
+       role: "",
     },
   });
 
@@ -166,13 +166,13 @@ export default function AuthPage() {
                     <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4" data-testid="register-form">
                     <FormField
                       control={registerForm.control}
-                      name="role"
+                      name="type"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Designation</FormLabel>
                           <FormControl>
                             <Select onValueChange={field.onChange} defaultValue={field.value || "worker"}>
-                              <SelectTrigger data-testid="select-role">
+                              <SelectTrigger data-testid="select-type">
                                 <SelectValue placeholder="Select designation" />
                               </SelectTrigger>
                               <SelectContent>
@@ -215,14 +215,14 @@ export default function AuthPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
                           control={registerForm.control}
-                          name="department"
+                          name="location"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Department</FormLabel>
+                              <FormLabel>Location</FormLabel>
                               <FormControl>
                                 <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                                  <SelectTrigger data-testid="select-department">
-                                    <SelectValue placeholder="Select department" />
+                                  <SelectTrigger data-testid="select-location">
+                                    <SelectValue placeholder="Select location" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="Production">Production</SelectItem>
@@ -239,12 +239,12 @@ export default function AuthPage() {
                         />
                         <FormField
                           control={registerForm.control}
-                          name="position"
+                          name="role"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Position</FormLabel>
+                              <FormLabel>Role</FormLabel>
                               <FormControl>
-                                <Input placeholder="Job title" {...field} value={field.value || ""} data-testid="input-position" />
+                                <Input placeholder="Role" {...field} value={field.value || ""} data-testid="input-role" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

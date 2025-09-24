@@ -27,7 +27,7 @@ export default function StatsCards() {
     );
   }
 
-  if (user?.role === "admin") {
+  if (user?.type === "admin") {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="admin-stats-cards">
         <Card>
@@ -84,7 +84,7 @@ export default function StatsCards() {
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-muted-foreground">3 departments running</span>
+              <span className="text-muted-foreground">3 locations running</span>
             </div>
           </CardContent>
         </Card>

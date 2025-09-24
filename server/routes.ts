@@ -137,10 +137,9 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/leave-requests", async (req, res) => {
     try {
-      const user = req.user!;
       const validatedData = insertLeaveRequestSchema.parse({
         ...req.body,
-        userId: user.id,
+        userId: req.body.userId,
       });
       const request = await storage.createLeaveRequest(validatedData);
       res.status(201).json(request);

@@ -1,6 +1,7 @@
 import { User } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { 
   Factory, 
   LayoutDashboard, 
@@ -20,24 +21,36 @@ interface SidebarProps {
   user: User | null;
 }
 
+type NavItem = {
+  name: string;
+  icon: React.ElementType;
+  href: string;
+  current?: boolean;
+};
+
 export default function Sidebar({ user }: SidebarProps) {
   const { logoutMutation } = useAuth();
   if (!user) {
     return null;
   }
 
-  const navigation = [
-    { name: "Dashboard", icon: LayoutDashboard, href: "#", current: true },
-    { name: "Schedule", icon: Calendar, href: "#" },
-    { name: "Time Tracking", icon: Clock, href: "#" },
-    { name: "Attendance", icon: UserCheck, href: "#" },
-    { name: "Leave Requests", icon: CalendarX, href: "#" },
-    ...(user.role === "admin" ? [
-      { name: "Employee Management", icon: Users, href: "#" },
-      { name: "Analytics", icon: BarChart3, href: "#" },
-    ] : []),
-    { name: "Settings", icon: Settings, href: "#" },
-  ];
+  let navigation: NavItem[] = [];
+  if (user.type === "worker") {
+    navigation = [
+      { name: "Dashboard", icon: LayoutDashboard, href: "/", current: true },
+      { name: "Leave Request", icon: CalendarX, href: "/leave-request" },
+      { name: "Wage", icon: BarChart3, href: "/wage" },
+      // { name: "Settings", icon: Settings, href: "/settings" },
+      { name: "Edit My Details", icon: UserCheck, href: "/edit-worker-details" },
+    ];
+  } else if (user.type === "admin" || user.type === "supervisor") {
+    navigation = [
+      { name: "Dashboard", icon: LayoutDashboard, href: "/", current: true },
+      { name: "Leave Approval", icon: CalendarX, href: "/leave-approval" },
+      { name: "Edit User Details", icon: Users, href: "/edit-user" },
+      // { name: "Settings", icon: Settings, href: "/settings" },
+    ];
+  }
 
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col" data-testid="sidebar">
@@ -59,7 +72,7 @@ export default function Sidebar({ user }: SidebarProps) {
         {navigation.map((item) => {
           const Icon = item.icon;
           return (
-            <a
+            <Link
               key={item.name}
               href={item.href}
               className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
@@ -71,7 +84,7 @@ export default function Sidebar({ user }: SidebarProps) {
             >
               <Icon className="w-5 h-5" />
               <span className="text-sm font-medium">{item.name}</span>
-            </a>
+            </Link>
           );
         })}
       </nav>
@@ -84,8 +97,12 @@ export default function Sidebar({ user }: SidebarProps) {
           </div>
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground" data-testid="user-name">{user.name}</p>
-            <p className="text-xs text-muted-foreground" data-testid="user-role">
-              {user.role === "admin" ? "Administrator" : "Factory Worker"}
+            <p className="text-xs text-muted-foreground" data-testid="user-type">
+              {user.type === "admin"
+                ? "Administrator"
+                : user.type === "supervisor"
+                ? "Supervisor"
+                : "Factory Worker"}
             </p>
           </div>
         </div>

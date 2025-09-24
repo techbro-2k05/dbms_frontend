@@ -10,7 +10,7 @@ import AttendanceOverview from "@/components/dashboard/attendance-overview";
 
 export default function SupervisorDashboard() {
   const { user } = useAuth();
-  if (!user || user.role !== "supervisor") return null;
+  if (!user || user.type !== "supervisor") return null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background" data-testid="dashboard-supervisor">

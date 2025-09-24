@@ -69,9 +69,9 @@ export default function LeaveRequestsSection() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle data-testid="leave-requests-title">
-            {user?.role === "admin" ? "Leave Requests" : "My Leave Requests"}
+            {user?.type === "admin" ? "Leave Requests" : "My Leave Requests"}
           </CardTitle>
-          {user?.role === "normal" && (
+          {user?.type === "worker" && (
             <Dialog open={showForm} onOpenChange={setShowForm}>
               <DialogTrigger asChild>
                 <Button data-testid="button-new-request">New Request</Button>
@@ -97,21 +97,21 @@ export default function LeaveRequestsSection() {
               <TableHeader>
                 <TableRow>
                   <TableHead>
-                    {user?.role === "admin" ? "Employee" : "Type"}
+                    {user?.type === "admin" ? "Employee" : "Type"}
                   </TableHead>
                   <TableHead>
-                    {user?.role === "admin" ? "Leave Type" : "Dates"}
+                    {user?.type === "admin" ? "Leave Type" : "Dates"}
                   </TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Status</TableHead>
-                  {user?.role === "admin" && <TableHead>Action</TableHead>}
+                  {user?.type === "admin" && <TableHead>Action</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {requests.slice(0, 5).map((request: any) => (
                   <TableRow key={request.id} data-testid={`request-${request.id}`}>
                     <TableCell>
-                      {user?.role === "admin" ? (
+                      {user?.type === "admin" ? (
                         <span className="font-medium" data-testid={`request-employee-${request.id}`}>
                           {request.user?.name || "Unknown"}
                         </span>
@@ -122,7 +122,7 @@ export default function LeaveRequestsSection() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {user?.role === "admin" ? (
+                      {user?.type === "admin" ? (
                         <span className="text-muted-foreground" data-testid={`request-admin-type-${request.id}`}>
                           {request.type}
                         </span>
@@ -140,7 +140,7 @@ export default function LeaveRequestsSection() {
                         {request.status}
                       </Badge>
                     </TableCell>
-                    {user?.role === "admin" && (
+                    {user?.type === "admin" && (
                       <TableCell>
                         {request.status === "pending" ? (
                           <div className="flex space-x-2">

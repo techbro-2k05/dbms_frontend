@@ -14,11 +14,13 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import LeaveRequestForm from "@/components/forms/leave-request-form";
+import ViewScheduleDialog from "@/components/dashboard/view-schedule-dialog";
 
 export default function QuickActions() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showLeaveForm, setShowLeaveForm] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
 
   const clockMutation = useMutation({
     mutationFn: async (type: "in" | "out") => {
@@ -43,7 +45,7 @@ export default function QuickActions() {
   });
 
   const actions = [
-    ...(user?.role === "normal" ? [
+  ...(user?.type === "normal" ? [
       {
         icon: Clock,
         label: "Clock In/Out",
@@ -66,10 +68,10 @@ export default function QuickActions() {
       icon: Calendar,
       label: "View Schedule",
       color: "text-blue-600",
-      onClick: () => {},
+      onClick: () => setShowSchedule(true),
       testId: "action-view-schedule"
     },
-    ...(user?.role === "admin" ? [
+  ...(user?.type === "admin" ? [
       {
         icon: UserPlus,
         label: "Add Employee",
@@ -116,6 +118,8 @@ export default function QuickActions() {
             <LeaveRequestForm onSuccess={() => setShowLeaveForm(false)} />
           </DialogContent>
         </Dialog>
+        {/* View Schedule Dialog */}
+        <ViewScheduleDialog open={showSchedule} onOpenChange={setShowSchedule} />
       </CardContent>
     </Card>
   );

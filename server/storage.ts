@@ -88,8 +88,8 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser,
       id, 
-      department: insertUser.department || null,
-      position: insertUser.position || null,
+  location: insertUser.location || null,
+       role: insertUser.role || null,
       createdAt: new Date(),
     };
     this.users.set(id, user);
@@ -129,6 +129,7 @@ export class MemStorage implements IStorage {
       description: insertShift.description || null,
       assignedUserId: insertShift.assignedUserId || null,
       createdAt: new Date(),
+      status: "scheduled",
     };
     this.shifts.set(id, shift);
     return shift;
@@ -169,6 +170,7 @@ export class MemStorage implements IStorage {
       id,
       reason: insertRequest.reason || null,
       createdAt: new Date(),
+      status: "pending",
       approvedBy: null,
     };
     this.leaveRequests.set(id, request);
