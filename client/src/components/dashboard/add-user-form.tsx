@@ -14,7 +14,9 @@ import {
 import { UserService } from "@/services/api";
 
 type FormValues = {
-  name: string;
+  fname: string;
+  mname: string;
+  lname: string;
   username: string;
   password: string;
   type: string;
@@ -25,7 +27,9 @@ type FormValues = {
 export default function AddUserForm() {
   const form = useForm<FormValues>({
     defaultValues: {
-      name: "",
+      fname: "",
+      mname: "",
+      lname: "",
       username: "",
       password: "",
       type: "worker",
@@ -43,9 +47,9 @@ export default function AddUserForm() {
         // username: values.username?.trim(),
         // location: values.location?.trim(),
         // role: values.role?.trim(),
-        fName: values.name?.trim(),
-        mName: null,
-        lName: null,
+        fName: values.fname?.trim(),
+        mName: values.mname?.trim(),
+        lName: values.lname?.trim(),
         gender: null,
         phone: null,
         password: values.password,
@@ -73,10 +77,36 @@ export default function AddUserForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="fname"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} required />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="mname"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Middle Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} required />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lname"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
                   <FormControl>
                     <Input {...field} required />
                   </FormControl>
