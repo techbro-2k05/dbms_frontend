@@ -22,7 +22,8 @@ import EditWorkerDetails from "@/pages/edit-worker-details";
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/" component={() => <Dashboard />} />
+      {/* <ProtectedRoute path="/" component={() => <Dashboard />} /> */}
+      <Route path="/" component={AdminDashboard}></Route>
       <Route path="/auth" component={AuthPage} />
   <Route path="/worker-dashboard" component={WorkerDashboard} />
   <Route path="/wage" component={Wage} />

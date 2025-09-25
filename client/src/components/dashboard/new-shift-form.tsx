@@ -4,35 +4,72 @@ import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormField, FormItem, FormLabel, FormMessage, FormControl } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormControl,
+} from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { queryClient } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
+import { ShiftService } from "@/services/api"; 
+
 export default function NewShiftForm() {
   const [showForm, setShowForm] = useState(false);
-  const { data: users = [] } = useQuery<any[]>({
-    queryKey: ["/api/users"],
-  });
 
   const form = useForm({
     defaultValues: {
       title: "",
-      date: "",
+      day: "",
       startTime: "",
-      duration: "",
-      assignedUserIds: [] as string[],
+      endTime: "",
+    },
+  });
+
+  // Fetch existing shifts
+  const {
+    data: shifts = [],
+    isLoading: shiftsLoading,
+    isError: shiftsError,
+    error: shiftsFetchError,
+  } = useQuery({
+    queryKey: ["/shifts"],
+    queryFn: async () => {
+      const res = await ShiftService.getAll();
+      return Array.isArray(res.data) ? res.data : [];
     },
   });
 
   const createShiftMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/shifts", data);
-      return res.json();
+      const res = await ShiftService.create(data);
+      return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["/shifts"] });
       setShowForm(false);
       form.reset();
+    },
+    onError: (err: any) => {
+      console.error("Create shift failed:", err);
+      alert("Failed to create shift: " + (err?.message || "Unknown error"));
     },
   });
 
@@ -70,12 +107,12 @@ export default function NewShiftForm() {
                   />
                   <FormField
                     control={form.control}
-                    name="date"
+                    name="day"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Date</FormLabel>
+                        <FormLabel>Day</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} required />
+                          <Input type="text" {...field} required />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -96,47 +133,25 @@ export default function NewShiftForm() {
                   />
                   <FormField
                     control={form.control}
-                    name="duration"
+                    name="endTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Duration (hours)</FormLabel>
+                        <FormLabel>End Time</FormLabel>
                         <FormControl>
-                          <Input type="number" min={1} {...field} required />
+                          <Input type="time" {...field} required />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  {/* <FormField
-                    control={form.control}
-                    name="assignedUserIds"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Assign Users</FormLabel>
-                        <div className="grid grid-cols-2 gap-2">
-                          {users.map((user) => (
-                            <label key={user.id} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={field.value.includes(user.id)}
-                                onChange={() => {
-                                  if (field.value.includes(user.id)) {
-                                    field.onChange(field.value.filter((id: string) => id !== user.id));
-                                  } else {
-                                    field.onChange([...field.value, user.id]);
-                                  }
-                                }}
-                              />
-                              <span>{user.name} ({user.type})</span>
-                            </label>
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={createShiftMutation.isPending}
+                  >
+                    {createShiftMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                  /> */}
-                  <Button type="submit" className="w-full" disabled={createShiftMutation.isPending}>
-                    {createShiftMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Allocate Shift
                   </Button>
                 </form>
@@ -145,8 +160,40 @@ export default function NewShiftForm() {
           </Dialog>
         </div>
       </CardHeader>
+
       <CardContent>
-        <div className="text-muted-foreground">Create and assign new shifts to users. All fields are required.</div>
+        {shiftsLoading ? (
+          <div>Loading shifts…</div>
+        ) : shiftsError ? (
+          <div className="text-destructive">
+            Error loading shifts: {String((shiftsFetchError as any)?.message ?? "Unknown")}
+          </div>
+        ) : shifts.length === 0 ? (
+          <div className="text-muted-foreground">
+            Create and assign new shifts to users. All fields are required.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Day</TableHead>
+                <TableHead>Start Time</TableHead>
+                <TableHead>End Time</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {shifts.map((s: any) => (
+                <TableRow key={s.id ?? `${s.title}-${s.day}-${s.startTime}`}>
+                  <TableCell>{s.title ?? "—"}</TableCell>
+                  <TableCell>{s.day ?? "—"}</TableCell>
+                  <TableCell>{s.startTime ?? "—"}</TableCell>
+                  <TableCell>{s.endTime ?? "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );

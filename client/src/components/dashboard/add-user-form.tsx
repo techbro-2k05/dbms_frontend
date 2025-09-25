@@ -1,36 +1,66 @@
+import React from "react";
 import { useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormField, FormItem, FormLabel, FormMessage, FormControl } from "@/components/ui/form";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormControl,
+} from "@/components/ui/form";
+import { UserService } from "@/services/api";
+
+type FormValues = {
+  name: string;
+  username: string;
+  password: string;
+  type: string;
+  location?: string;
+  role?: string;
+};
 
 export default function AddUserForm() {
-  const form = useForm({
+  const form = useForm<FormValues>({
     defaultValues: {
       name: "",
       username: "",
       password: "",
-          type: "worker",
-          location: "",
-          role: "",
+      type: "worker",
+      location: "",
+      role: "",
     },
   });
 
-  const createUserMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/employees", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+  const onSubmit = async (values: FormValues) => {
+    try {
+      // optionally transform values before sending (e.g., trim)
+      const payload = {
+        // ...values,
+        // name: values.name?.trim(),
+        // username: values.username?.trim(),
+        // location: values.location?.trim(),
+        // role: values.role?.trim(),
+        fName: values.name?.trim(),
+        mName: null,
+        lName: null,
+        gender: null,
+        phone: null,
+        password: values.password,
+      };
+
+      await UserService.create(payload);
+      // success handling
+      alert("User created successfully");
       form.reset();
-    },
-  });
-
-  const onSubmit = (data: any) => {
-    createUserMutation.mutate(data);
+    } catch (error: any) {
+      console.error("Create user failed:", error);
+      const msg =
+        error?.response?.data?.message || error?.message || "Unknown error";
+      alert("Failed to create user: " + msg);
+    }
   };
 
   return (
@@ -119,8 +149,8 @@ export default function AddUserForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={createUserMutation.isPending}>
-              Add User
+            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Adding..." : "Add User"}
             </Button>
           </form>
         </Form>

@@ -10,9 +10,19 @@ import AttendanceOverview from "@/components/dashboard/attendance-overview";
 import AnalyticsSection from "@/components/dashboard/analytics-section";
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  
-    if (!user) return null;
+  // const { user } = useAuth();
+  //   if (!user) return null;
+
+  const user = {
+    id: "some-uuid", // generate or assign a UUID
+    username: "admin",
+    password: "admin123", // hash in production!
+    name: "Administrator",
+    type: "admin",        // member type
+    location: "Administration",
+    role: "Manager",      // or any role/title
+    createdAt: new Date(),
+  };
 
     // Route to dedicated dashboard pages
   if (user.type === "worker") {
