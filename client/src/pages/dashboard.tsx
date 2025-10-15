@@ -11,29 +11,28 @@ import AnalyticsSection from "@/components/dashboard/analytics-section";
 
 export default function Dashboard() {
   // const { user } = useAuth();
-  //   if (!user) return null;
-
   const user = {
-    id: "some-uuid", // generate or assign a UUID
-    username: "admin",
-    password: "admin123", // hash in production!
-    name: "Administrator",
-    type: "admin",        // member type
-    location: "Administration",
-    role: "Manager",      // or any role/title
-    createdAt: new Date(),
-  };
+  id: "some-uuid", // generate or assign a UUID
+  username: "admin",
+  password: "admin123", // hash in production!
+  name: "Administrator",
+  type: "admin",        // member type
+  location: "Administration",
+  role: "Manager",      // or any role/title
+  createdAt: new Date(),
+};
+    if (!user) return null;
 
     // Route to dedicated dashboard pages
-  if (user.type === "worker") {
+    if (user.role === "worker") {
       window.location.replace("/worker-dashboard");
       return null;
     }
-  if (user.type === "supervisor") {
+    if (user.role === "supervisor") {
       window.location.replace("/supervisor-dashboard");
       return null;
     }
-  if (user.type === "admin") {
+    if (user.role === "admin") {
       window.location.replace("/admin-dashboard");
       return null;
     }
@@ -63,7 +62,7 @@ export default function Dashboard() {
             </div>
           </div>
           
-          {user.type === "admin" && (
+          {user.role === "admin" && (
             <div className="mt-8">
               <AnalyticsSection />
             </div>

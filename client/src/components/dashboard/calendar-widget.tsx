@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -26,65 +25,45 @@ export default function CalendarWidget() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-
-  // Mock data: working days, leave days, and shift details
-  // In a real app, these would come from API
-  const workingDays = [
-    new Date(2024, 11, 18),
-    new Date(2024, 11, 19),
-    new Date(2024, 11, 20),
-    new Date(2024, 11, 21),
-    new Date(2024, 11, 22),
-    new Date(2024, 11, 23),
-    new Date(2024, 11, 24),
+  // Mock events - in a real app, these would come from API
+  const eventDates = [
+    new Date(2024, 11, 20), // Dec 20
+    new Date(2024, 11, 25), // Dec 25 (Holiday)
+    new Date(2024, 11, 26), // Dec 26 (Holiday)
   ];
-  const leaveDays = [
+
+  const holidayDates = [
     new Date(2024, 11, 25), // Christmas
     new Date(2024, 11, 26), // Boxing Day
   ];
-  const shiftDetails: Record<string, { shift: string; time: string }> = {
-    "2024-12-18": { shift: "Morning", time: "8:00 AM - 4:00 PM" },
-    "2024-12-19": { shift: "Evening", time: "4:00 PM - 12:00 AM" },
-    "2024-12-20": { shift: "Night", time: "12:00 AM - 8:00 AM" },
-    "2024-12-21": { shift: "Morning", time: "8:00 AM - 4:00 PM" },
-    "2024-12-22": { shift: "Evening", time: "4:00 PM - 12:00 AM" },
-    "2024-12-23": { shift: "Night", time: "12:00 AM - 8:00 AM" },
-    "2024-12-24": { shift: "Morning", time: "8:00 AM - 4:00 PM" },
+
+  const hasEvent = (date: Date) => {
+    return eventDates.some(eventDate => isSameDay(date, eventDate));
   };
 
-  const isWorkingDay = (date: Date) => {
-    return workingDays.some(d => isSameDay(date, d));
-  };
-  const isLeaveDay = (date: Date) => {
-    return leaveDays.some(d => isSameDay(date, d));
+  const isHoliday = (date: Date) => {
+    return holidayDates.some(holidayDate => isSameDay(date, holidayDate));
   };
 
   const getDayClasses = (date: Date) => {
-    let classes = "aspect-square flex items-center justify-center text-sm cursor-pointer transition-colors relative ";
+    let classes = "aspect-square flex items-center justify-center text-sm cursor-pointer transition-colors ";
+    
     if (!isSameMonth(date, currentDate)) {
       classes += "text-muted-foreground ";
     }
-    if (isLeaveDay(date)) {
-      classes += "bg-red-200 text-red-800 font-semibold rounded-md ";
-    } else if (isWorkingDay(date)) {
-      classes += "bg-blue-200 text-blue-900 font-semibold rounded-md ";
-    } else if (isToday(date)) {
-      classes += "border-2 border-primary ";
+    
+    if (isToday(date)) {
+      classes += "bg-primary text-primary-foreground font-semibold rounded-md ";
+    } else if (isHoliday(date)) {
+      classes += "bg-red-100 text-red-800 rounded-md ";
     } else {
       classes += "hover:bg-accent rounded-md ";
     }
+    
     return classes;
   };
 
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  // Dialog state for shift details
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const handleDayClick = (date: Date) => {
-    if (isWorkingDay(date)) {
-      setSelectedDate(date);
-    }
-  };
 
   return (
     <Card data-testid="calendar-widget">
@@ -124,49 +103,28 @@ export default function CalendarWidget() {
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1" data-testid="calendar-grid">
-          {calendarDays.map((date, index) => {
-            const dateKey = format(date, "yyyy-MM-dd");
-            return (
-              <div
-                key={index}
-                className={getDayClasses(date)}
-                data-testid={`calendar-day-${dateKey}`}
-                onClick={() => handleDayClick(date)}
-              >
-                <span>{format(date, "d")}</span>
-                {isWorkingDay(date) && (
-                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-500 rounded-full" />
-                )}
-                {isLeaveDay(date) && (
-                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-500 rounded-full" />
-                )}
-              </div>
-            );
-          })}
+          {calendarDays.map((date, index) => (
+            <div
+              key={index}
+              className={getDayClasses(date)}
+              data-testid={`calendar-day-${format(date, "yyyy-MM-dd")}`}
+            >
+              <span>{format(date, "d")}</span>
+              {hasEvent(date) && (
+                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full" />
+              )}
+            </div>
+          ))}
         </div>
-        {/* Shift Details Dialog */}
-        <Dialog open={!!selectedDate} onOpenChange={() => setSelectedDate(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Shift Details</DialogTitle>
-            </DialogHeader>
-            {selectedDate && (
-              <div className="space-y-2">
-                <div>Date: {format(selectedDate, "PPP")}</div>
-                <div>Shift: {shiftDetails[format(selectedDate, "yyyy-MM-dd")]?.shift || "N/A"}</div>
-                <div>Time: {shiftDetails[format(selectedDate, "yyyy-MM-dd")]?.time || "N/A"}</div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+        
         {/* Calendar Legend */}
         <div className="mt-4 space-y-2" data-testid="calendar-legend">
           <div className="flex items-center space-x-2 text-xs">
-            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-primary rounded-full"></div>
             <span className="text-muted-foreground">Work Day</span>
           </div>
           <div className="flex items-center space-x-2 text-xs">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
             <span className="text-muted-foreground">Holiday/Leave</span>
           </div>
         </div>

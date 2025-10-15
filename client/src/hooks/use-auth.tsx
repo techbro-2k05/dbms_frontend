@@ -17,7 +17,7 @@ type AuthContextType = {
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
 };
 
-type LoginData = Pick<InsertUser, "username" | "password">;
+type LoginData = Pick<InsertUser, "id" & "password">;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -27,17 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     isLoading,
   } = useQuery<SelectUser | undefined, Error>({
-    queryKey: ["/api/user"],
-    queryFn: async () => {
-      try {
-        // getQueryFn expects an object with url
-        return await getQueryFn({ url: "/api/user", on401: "returnNull" })();
-      } catch {
-        // fallback to localStorage
-        const stored = localStorage.getItem("user");
-        return stored ? JSON.parse(stored) : null;
-      }
-    },
+    queryKey: ["/api/members"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
   const loginMutation = useMutation({
@@ -46,8 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
-      localStorage.setItem("user", JSON.stringify(user));
+      queryClient.setQueryData(["/api/members"], user);
     },
     onError: (error: Error) => {
       toast({
@@ -64,8 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
-      localStorage.setItem("user", JSON.stringify(user));
+      queryClient.setQueryData(["/api/members"], user);
     },
     onError: (error: Error) => {
       toast({
@@ -81,8 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
-      localStorage.removeItem("user");
+      queryClient.setQueryData(["/api/members"], null);
     },
     onError: (error: Error) => {
       toast({

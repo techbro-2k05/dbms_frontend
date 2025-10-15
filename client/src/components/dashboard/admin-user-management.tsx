@@ -1,150 +1,48 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { queryClient } from "@/lib/queryClient";
+import { useState } from "react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { UserService } from "@/services/api";
+// import AddUserForm from "@/components/dashboard/add-user-form";
 
-type MemberDto = {
-  id: number;
-  fname: string;
-  mname?: string;
-  lname?: string;
-  gender?: string;
-  dob?: string;
-  phone?: string;
-  apartment?: string;
-  city?: string;
-  // ...other backend fields
-};
+export default function AdminUserManagement(){
+  // const { user } = useAuth();
+  const { data, isLoading } = useQuery({
+    queryKey: ["/api/members"],
+  });
+  const users = Array.isArray(data) ? data : [];
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [editData, setEditData] = useState<any>({});
 
-type FrontendUser = {
-  id: number;
-  name: string | null;
-  username: string; // mapped from id as requested
-  type: string | null;
-  location: string | null;
-  role: string | null;
-  __raw?: MemberDto; // keep raw DTO in case it's needed
-};
-
-export default function AdminUserManagement() {
-  const { user: currentUser } = useAuth();
-
-  // fetch members and map them to the frontend user shape
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["/members"],
-    queryFn: async () => {
-      const res = await UserService.getAll();
-      const members: MemberDto[] = Array.isArray(res.data) ? res.data : [];
-      const mapped: FrontendUser[] = members.map((m) => ({
-        id: m.id,
-        name: m.fname ?? null,
-        username: String(m.id), // as requested: username with id
-        type: null,
-        location: null,
-        role: null,
-        __raw: m,
-      }));
-      return mapped;
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, ...data }: any) => {
+      const res = await apiRequest("PATCH", `/api/employees/${id}`, data);
+      return res.json();
     },
-    // optional: staleTime / cacheTime adjustments here
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      setEditUserId(null);
+    },
   });
 
-  const users: FrontendUser[] = Array.isArray(data) ? data : [];
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/employees/${id}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+    },
+  });
 
-  const [editUserId, setEditUserId] = useState<number | null>(null);
-  const [editData, setEditData] = useState<Partial<FrontendUser>>({});
-
-  const [savingId, setSavingId] = useState<number | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  const handleEdit = (u: FrontendUser) => {
-    setEditUserId(u.id);
-    // keep shallow copy for editing
-    setEditData({ ...u });
+  const handleEdit = (user: any) => {
+    setEditUserId(user.id);
+    setEditData(user);
   };
 
-  const handleCancelEdit = () => {
-    setEditUserId(null);
-    setEditData({});
+  const handleSave = () => {
+    updateUserMutation.mutate(editData);
   };
-
-  // convert frontend editData to backend DTO shape expected by API
-  const buildPayloadForBackend = (edited: Partial<FrontendUser>) => {
-    const payload: any = {};
-    // map name -> fName if present
-    if (edited.name !== undefined) payload.fName = edited.name;
-    // if you later allow editing apartment/city from frontend, map them here to apartment/city
-    // currently we only send fName since other backend fields aren't represented
-    return payload;
-  };
-
-  const handleSave = async () => {
-    if (editUserId === null) return;
-    const id = editUserId;
-    try {
-      setSavingId(id);
-      const payload = buildPayloadForBackend(editData);
-      // send only the DTO fields backend expects
-      await UserService.update(id, payload);
-      await queryClient.invalidateQueries({ queryKey: ["/members"] });
-      setEditUserId(null);
-      setEditData({});
-    } catch (err: any) {
-      console.error("Update failed:", err);
-      alert("Failed to update user: " + (err?.message || "Unknown error"));
-    } finally {
-      setSavingId(null);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
-    try {
-      setDeletingId(id);
-      await UserService.delete(id);
-      await queryClient.invalidateQueries({ queryKey: ["/members"] });
-    } catch (err: any) {
-      console.error("Delete failed:", err);
-      alert("Failed to delete user: " + (err?.message || "Unknown error"));
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>User Directory</CardTitle>
-        </CardHeader>
-        <CardContent>Loading users…</CardContent>
-      </Card>
-    );
-  }
-
-  if (isError) {
-    console.error(error);
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>User Directory</CardTitle>
-        </CardHeader>
-        <CardContent>Error loading users. Check console for details.</CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
@@ -152,124 +50,109 @@ export default function AdminUserManagement() {
         <CardTitle>User Directory</CardTitle>
       </CardHeader>
       <CardContent>
-        {users.length === 0 ? (
-          <div>No users found.</div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Username</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Actions</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {/* fname: "",
+              mname: "",
+              lname: "",
+              password: "",
+              type: "MEMBER",
+              phone:"",
+              gender: "MALE",//"MALE" or "FEMALE"
+              allowedPaidLeaves:0,
+              allowedHours: 0,
+              worksAt: 0, */}
+              <TableHead>First Name</TableHead>
+              <TableHead>Last Name</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Location_ID</TableHead>
+              <TableHead>Allowed Hourse</TableHead>
+              <TableHead>Allowed Paid leaves</TableHead>
+              <TableHead>Gender</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Password</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user: any) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Input value={editData.name} onChange={e => setEditData({ ...editData, fname: e.target.value })} />
+                  ) : (
+                    user.fname
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Input value={editData.name} onChange={e => setEditData({ ...editData, lname: e.target.value })} />
+                  ) : (
+                    user.lname
+                  )}
+                </TableCell>
+                {/* <TableCell>{user.username}</TableCell> */}
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Input value={editData.type} onChange={e => setEditData({ ...editData, type: e.target.value })} />
+                  ) : (
+                    user.type
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Input value={editData.location} onChange={e => setEditData({ ...editData, worksAt: e.target.value })} />
+                  ) : (
+                    user.worksAt
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Input value={editData.role} onChange={e => setEditData({ ...editData, allowedHours: e.target.value })} />
+                  ) : (
+                    user.allowedHours
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Input value={editData.role} onChange={e => setEditData({ ...editData, allowedPaidLeaves: e.target.value })} />
+                  ) : (
+                    user.allowedPaidLeaves
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Input value={editData.role} onChange={e => setEditData({ ...editData, gender: e.target.value })} />
+                  ) : (
+                    user.gender
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Input value={editData.role} onChange={e => setEditData({ ...editData, phone: e.target.value })} />
+                  ) : (
+                    user.phone
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Input value={editData.role} onChange={e => setEditData({ ...editData, password: e.target.value })} />
+                  ) : (
+                    user.password
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editUserId === user.id ? (
+                    <Button size="sm" onClick={handleSave}>Save</Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(user)}>Edit</Button>
+                  )}
+                  <Button size="sm" variant="destructive" onClick={() => deleteUserMutation.mutate(user.id)} className="ml-2">Delete</Button>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell>
-                    {editUserId === u.id ? (
-                      <Input
-                        value={editData.name ?? ""}
-                        onChange={(e) =>
-                          setEditData({ ...editData, name: e.target.value })
-                        }
-                      />
-                    ) : (
-                      u.name ?? "—"
-                    )}
-                  </TableCell>
-
-                  <TableCell>{u.username}</TableCell>
-
-                  <TableCell>
-                    {editUserId === u.id ? (
-                      <Input
-                        value={editData.type ?? ""}
-                        onChange={(e) =>
-                          setEditData({ ...editData, type: e.target.value })
-                        }
-                      />
-                    ) : (
-                      u.type ?? "—"
-                    )}
-                  </TableCell>
-
-                  <TableCell>
-                    {editUserId === u.id ? (
-                      <Input
-                        value={editData.location ?? ""}
-                        onChange={(e) =>
-                          setEditData({ ...editData, location: e.target.value })
-                        }
-                      />
-                    ) : (
-                      u.location ?? "—"
-                    )}
-                  </TableCell>
-
-                  <TableCell>
-                    {editUserId === u.id ? (
-                      <Input
-                        value={editData.role ?? ""}
-                        onChange={(e) =>
-                          setEditData({ ...editData, role: e.target.value })
-                        }
-                      />
-                    ) : (
-                      u.role ?? "—"
-                    )}
-                  </TableCell>
-
-                  <TableCell>
-                    {editUserId === u.id ? (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={handleSave}
-                          disabled={savingId !== null}
-                        >
-                          {savingId === u.id ? "Saving..." : "Save"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleCancelEdit}
-                          className="ml-2"
-                          disabled={savingId !== null}
-                        >
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(u)}
-                        >
-                          Edit
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(u.id)}
-                          className="ml-2"
-                          disabled={deletingId !== null}
-                        >
-                          {deletingId === u.id ? "Deleting..." : "Delete"}
-                        </Button>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

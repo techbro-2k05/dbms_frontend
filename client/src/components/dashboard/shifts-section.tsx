@@ -28,8 +28,8 @@ export default function ShiftsSection() {
     }
   };
 
-  const getShiftIcon = (location: string) => {
-  switch (location?.toLowerCase()) {
+  const getShiftIcon = (department: string) => {
+    switch (department?.toLowerCase()) {
       case "production":
         return <Briefcase className="w-5 h-5 text-primary-foreground" />;
       case "quality control":
@@ -46,9 +46,9 @@ export default function ShiftsSection() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle data-testid="shifts-title">
-            {user?.type === "admin" ? "Today's Shifts" : "My Upcoming Shifts"}
+            {user?.role === "admin" ? "Today's Shifts" : "My Upcoming Shifts"}
           </CardTitle>
-          {user?.type === "normal" && (
+          {user?.role === "normal" && (
             <Button variant="link" size="sm" data-testid="button-view-all-shifts">
               View All
             </Button>
@@ -78,7 +78,7 @@ export default function ShiftsSection() {
               <div key={shift.id} className="flex items-center justify-between p-4 border border-border rounded-lg" data-testid={`shift-${shift.id}`}>
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                    {getShiftIcon(shift.location)}
+                    {getShiftIcon(shift.department)}
                   </div>
                   <div>
                     <h3 className="font-medium text-foreground" data-testid={`shift-title-${shift.id}`}>
@@ -87,7 +87,7 @@ export default function ShiftsSection() {
                     <p className="text-sm text-muted-foreground" data-testid={`shift-time-${shift.id}`}>
                       {format(new Date(shift.startTime), "HH:mm")} - {format(new Date(shift.endTime), "HH:mm")}
                     </p>
-                    {user?.type === "admin" && shift.assignedUser && (
+                    {user?.role === "admin" && shift.assignedUser && (
                       <p className="text-xs text-muted-foreground" data-testid={`shift-employee-${shift.id}`}>
                         Assigned: {shift.assignedUser.name}
                       </p>
@@ -98,8 +98,8 @@ export default function ShiftsSection() {
                   <Badge className={getStatusColor(shift.status)} data-testid={`shift-status-${shift.id}`}>
                     {shift.status}
                   </Badge>
-                  <p className="text-sm text-muted-foreground mt-1" data-testid={`shift-location-${shift.id}`}> 
-                    {shift.location}
+                  <p className="text-sm text-muted-foreground mt-1" data-testid={`shift-department-${shift.id}`}>
+                    {shift.department}
                   </p>
                 </div>
               </div>

@@ -15,50 +15,53 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Factory } from "lucide-react";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+   id: z.coerce.number({
+      required_error: "ID is required", // Use required_error for empty/missing
+      invalid_type_error: "ID must be a number", // Error if it contains text
+  }).positive("ID must be positive"), 
   password: z.string().min(1, "Password is required"),
 });
 
-const registerSchema = z.object({
-  name: z.string().min(1, "Full name is required"),
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Password confirmation is required"),
-    type: z.enum(["worker", "supervisor", "admin"]),
-  location: z.string().optional().nullable(),
-    role: z.string().optional().nullable(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+// const registerSchema = z.object({
+//   name: z.string().min(1, "Full name is required"),
+//   username: z.string().min(1, "Username is required"),
+//   password: z.string().min(6, "Password must be at least 6 characters"),
+//   confirmPassword: z.string().min(6, "Password confirmation is required"),
+//   type: z.enum(["worker", "supervisor", "admin"]),
+//   department: z.string().optional().nullable(),
+//   position: z.string().optional().nullable(),
+// }).refine((data) => data.password === data.confirmPassword, {
+//   message: "Passwords don't match",
+//   path: ["confirmPassword"],
+// });
 
 type LoginData = z.infer<typeof loginSchema>;
-type RegisterData = z.infer<typeof registerSchema>;
+// type RegisterData = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation} = useAuth();
   const [activeTab, setActiveTab] = useState("login");
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      id: 0,
       password: "",
     },
   });
 
-  const registerForm = useForm<RegisterData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: "",
-      username: "",
-      password: "",
-      confirmPassword: "",
-       type: "worker",
-  location: "",
-       role: "",
-    },
-  });
+  // const registerForm = useForm<RegisterData>({
+  //   resolver: zodResolver(registerSchema),
+  //   defaultValues: {
+  //     name: "",
+  //     username: "",
+  //     password: "",
+  //     confirmPassword: "",
+  //     type: "worker",
+  //     department: "",
+  //     position: "",
+  //   },
+  // });
 
   // Redirect if already authenticated
   if (user) {
@@ -69,10 +72,10 @@ export default function AuthPage() {
     loginMutation.mutate(data);
   };
 
-  const onRegister = (data: RegisterData) => {
-    const { confirmPassword, ...registerData } = data;
-    registerMutation.mutate(registerData);
-  };
+  // const onRegister = (data: RegisterData) => {
+  //   const { confirmPassword, ...registerData } = data;
+  //   registerMutation.mutate(registerData);
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex">
@@ -88,10 +91,10 @@ export default function AuthPage() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} data-testid="auth-tabs">
-            <TabsList className="grid w-full grid-cols-2" data-testid="tabs-list">
-              <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger>
-              <TabsTrigger value="register" data-testid="tab-register">Register</TabsTrigger>
-            </TabsList>
+            {/* <TabsList className="grid w-full grid-cols-2 justify-centre" data-testid="tabs-list">
+              {/* <TabsTrigger value="login" data-testid="tab-login">Login</TabsTrigger> */}
+              {/* <TabsTrigger value="register" data-testid="tab-register">Register</TabsTrigger> */}
+            {/* </TabsList> */} 
 
             <TabsContent value="login" data-testid="login-tab">
               <Card>
@@ -106,10 +109,10 @@ export default function AuthPage() {
                     <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4" data-testid="login-form">
                       <FormField
                         control={loginForm.control}
-                        name="username"
+                        name="id"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>UserId</FormLabel>
                             <FormControl>
                               <Input placeholder="Enter your username" {...field} data-testid="input-username" />
                             </FormControl>
@@ -145,15 +148,15 @@ export default function AuthPage() {
                   <div className="mt-4 p-3 bg-muted rounded-lg">
                     <p className="text-sm text-muted-foreground font-medium mb-2">Demo Credentials:</p>
                     <div className="text-xs space-y-1">
-                      <div><strong>Admin:</strong> admin / admin123</div>
-                      <div><strong>Worker:</strong> worker / worker123</div>
+                      <div><strong>Admin:</strong> 123 / admin123</div>
+                      <div><strong>Worker:</strong> 1234 / worker123</div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="register" data-testid="register-tab">
+            {/* <TabsContent value="register" data-testid="register-tab">
               <Card>
                 <CardHeader>
                   <CardTitle data-testid="register-title">Create Account</CardTitle>
@@ -166,13 +169,13 @@ export default function AuthPage() {
                     <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4" data-testid="register-form">
                     <FormField
                       control={registerForm.control}
-                      name="type"
+                      name="role"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Designation</FormLabel>
                           <FormControl>
                             <Select onValueChange={field.onChange} defaultValue={field.value || "worker"}>
-                              <SelectTrigger data-testid="select-type">
+                              <SelectTrigger data-testid="select-role">
                                 <SelectValue placeholder="Select designation" />
                               </SelectTrigger>
                               <SelectContent>
@@ -215,14 +218,14 @@ export default function AuthPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
                           control={registerForm.control}
-                          name="location"
+                          name="department"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Location</FormLabel>
+                              <FormLabel>Department</FormLabel>
                               <FormControl>
                                 <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                                  <SelectTrigger data-testid="select-location">
-                                    <SelectValue placeholder="Select location" />
+                                  <SelectTrigger data-testid="select-department">
+                                    <SelectValue placeholder="Select department" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="Production">Production</SelectItem>
@@ -239,12 +242,12 @@ export default function AuthPage() {
                         />
                         <FormField
                           control={registerForm.control}
-                          name="role"
+                          name="position"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Role</FormLabel>
+                              <FormLabel>Position</FormLabel>
                               <FormControl>
-                                <Input placeholder="Role" {...field} value={field.value || ""} data-testid="input-role" />
+                                <Input placeholder="Job title" {...field} value={field.value || ""} data-testid="input-position" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -290,7 +293,7 @@ export default function AuthPage() {
                   </Form>
                 </CardContent>
               </Card>
-            </TabsContent>
+            </TabsContent> */}
           </Tabs>
         </div>
       </div>

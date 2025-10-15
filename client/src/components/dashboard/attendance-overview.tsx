@@ -7,7 +7,7 @@ export default function AttendanceOverview() {
   const { user } = useAuth();
   
   const { data: attendance, isLoading } = useQuery({
-  queryKey: ["/api/attendance", user?.type === "admin" ? { date: new Date().toISOString().split('T')[0] } : undefined],
+    queryKey: ["/api/attendance", user?.type === "ADMIN" ? { date: new Date().toISOString().split('T')[0] } : undefined],
   });
 
   if (isLoading) {
@@ -28,11 +28,11 @@ export default function AttendanceOverview() {
     );
   }
 
-  // Calculate stats based on type
+  // Calculate stats based on role
   const getAttendanceStats = () => {
     if (!attendance) return { present: 0, absent: 0, late: 0, rate: 0 };
 
-  if (user?.type === "admin") {
+    if (user?.type === "ADMIN") {
       // For admin, show today's overall stats
       const present = attendance.filter((record: any) => record.status === "present").length;
       const absent = attendance.filter((record: any) => record.status === "absent").length;
@@ -59,7 +59,7 @@ export default function AttendanceOverview() {
     <Card data-testid="attendance-overview">
       <CardHeader>
         <CardTitle data-testid="attendance-title">
-          {user?.type === "admin" ? "Today's Attendance" : "My Attendance"}
+          {user?.type === "ADMIN" ? "Today's Attendance" : "My Attendance"}
         </CardTitle>
       </CardHeader>
       <CardContent>

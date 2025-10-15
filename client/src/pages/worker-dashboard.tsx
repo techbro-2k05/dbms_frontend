@@ -8,8 +8,20 @@ import QuickActions from "@/components/dashboard/quick-actions";
 import AttendanceOverview from "@/components/dashboard/attendance-overview";
 
 export default function WorkerDashboard() {
-  const { user } = useAuth();
-  if (!user || user.type !== "worker") return null;
+  const user = {
+      id:1234,
+      fname: "aa",
+      mname: "bb",
+      lname: "cc",
+      type: "MEMBER",
+      phone:"",
+      gender: "MALE",//"MALE" or "FEMALE"
+      allowedPaidLeaves:0,
+      allowedHours: 0,
+      worksAt: 0,  
+      password: "admin123", // hash in production!
+};
+  if (!user || user.type !== "MEMBER") return null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background" data-testid="dashboard-worker">

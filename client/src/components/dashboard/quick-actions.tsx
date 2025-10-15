@@ -17,7 +17,19 @@ import LeaveRequestForm from "@/components/forms/leave-request-form";
 import ViewScheduleDialog from "@/components/dashboard/view-schedule-dialog";
 
 export default function QuickActions() {
-  const { user } = useAuth();
+  const user = {
+      id:1234,
+      fname: "aa",
+      mname: "bb",
+      lname: "cc",
+      type: "MEMBER",
+      phone:"",
+      gender: "MALE",//"MALE" or "FEMALE"
+      allowedPaidLeaves:0,
+      allowedHours: 0,
+      worksAt: 0,  
+      password: "admin123", // hash in production!
+};
   const { toast } = useToast();
   const [showLeaveForm, setShowLeaveForm] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
@@ -45,7 +57,7 @@ export default function QuickActions() {
   });
 
   const actions = [
-  ...(user?.type === "normal" ? [
+    ...(user?.type === "MEMBER" ? [
       {
         icon: Clock,
         label: "Clock In/Out",
@@ -71,7 +83,7 @@ export default function QuickActions() {
       onClick: () => setShowSchedule(true),
       testId: "action-view-schedule"
     },
-  ...(user?.type === "admin" ? [
+    ...(user?.type === "ADMIN" ? [
       {
         icon: UserPlus,
         label: "Add Employee",

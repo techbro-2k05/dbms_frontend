@@ -35,20 +35,19 @@ export default function Sidebar({ user }: SidebarProps) {
   }
 
   let navigation: NavItem[] = [];
-  if (user.type === "worker") {
+  if (user.type === "MEMBER") {
     navigation = [
-      { name: "Dashboard", icon: LayoutDashboard, href: "/", current: true },
+      { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard", current: true },
       { name: "Leave Request", icon: CalendarX, href: "/leave-request" },
       { name: "Wage", icon: BarChart3, href: "/wage" },
-      // { name: "Settings", icon: Settings, href: "/settings" },
-      { name: "Edit My Details", icon: UserCheck, href: "/edit-worker-details" },
+      // { name: "Settings", icon: Settings, href: // "/settings" },
     ];
-  } else if (user.type === "admin" || user.type === "supervisor") {
+  } else if (user.type === "ADMIN" || user.type === "supervisor") {
     navigation = [
-      { name: "Dashboard", icon: LayoutDashboard, href: "/", current: true },
+      { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard", current: true },
       { name: "Leave Approval", icon: CalendarX, href: "/leave-approval" },
       { name: "Edit User Details", icon: Users, href: "/edit-user" },
-      // { name: "Settings", icon: Settings, href: "/settings" },
+      // { name: "Settings", icon: Settings, href: "/setti// ngs" },
     ];
   }
 
@@ -96,12 +95,12 @@ export default function Sidebar({ user }: SidebarProps) {
             <UserIcon className="w-4 h-4 text-primary-foreground" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground" data-testid="user-name">{user.name}</p>
-            <p className="text-xs text-muted-foreground" data-testid="user-type">
-              {user.type === "admin"
+            <p className="text-sm font-medium text-foreground" data-testid="user-name">{user.fname}</p>
+            <p className="text-xs text-muted-foreground" data-testid="user-role">
+              {user.type === "ADMIN"
                 ? "Administrator"
-                : user.type === "supervisor"
-                ? "Supervisor"
+                : user.type === "SUPERVISOR"
+                ? "SUPERVISOR"
                 : "Factory Worker"}
             </p>
           </div>

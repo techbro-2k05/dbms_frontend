@@ -2,16 +2,31 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
+      // fname: "aa",
+      // mname: "bb",
+      // lname: "cc",
+      // type: "ADMIN",
+      // phone:"",
+      // gender: "MALE",//"MALE" or "FEMALE"
+      
+      // worksAt: 0,  
+      // password: "admin123", // hash in production!
+  id: integer("id").primaryKey().default(sql`gen_random_uuid()`),
+  // username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  name: text("name").notNull(),
-  type: text("type").notNull().default("worker"), // "worker", "supervisor", "admin"
-  location: text("location"),
-  role: text("position"),
-  createdAt: timestamp("created_at").defaultNow(),
+  fname: text("first name").notNull(),
+  mname: text("middle name").notNull(),
+  worksAt: integer("location").notNull().default(0),
+  lname: text("last name").notNull(),
+  type: text("role").notNull().default("MEMBER"), // "MEMBER", "supervisor", "ADMIN"
+  // department: text("department"),
+  phone:text("phone").notNull(),
+  allowedPaidLeaves:integer("allowed_paid_leaves").notNull().default(100),
+  allowedHours: integer("allowed_hours").notNull().default(0),
+  gender: text("gender").notNull(),
+  // role: text("position"),
+  // createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const shifts = pgTable("shifts", {
@@ -20,7 +35,7 @@ export const shifts = pgTable("shifts", {
   description: text("description"),
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
-  location: text("location").notNull(),
+  department: text("department").notNull(),
   assignedUserId: varchar("assigned_user_id").references(() => users.id),
   status: text("status").notNull().default("scheduled"), // "scheduled", "active", "completed", "cancelled"
   createdAt: timestamp("created_at").defaultNow(),
@@ -55,7 +70,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 }).extend({
   password: z.string().min(6, "Password must be at least 6 characters"),
-  type: z.enum(["worker", "supervisor", "admin"]),
+  role: z.enum(["worker", "supervisor", "admin"]),
 });
 
 export const insertShiftSchema = createInsertSchema(shifts).omit({

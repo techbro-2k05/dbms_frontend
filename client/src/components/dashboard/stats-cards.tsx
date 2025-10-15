@@ -3,12 +3,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, UserCheck, Clock, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShiftService, UserService } from "@/services/api";
 
 export default function StatsCards() {
-  // const { user } = useAuth();
-
-  const user = {
+    const user = {
     id: "some-uuid", // generate or assign a UUID
     username: "admin",
     password: "admin123", // hash in production!
@@ -17,47 +14,29 @@ export default function StatsCards() {
     location: "Administration",
     role: "Manager",      // or any role/title
     createdAt: new Date(),
-  };
-
-  const userDataSize = useQuery({
-    queryKey: ["/members"],
-    queryFn: async() => {
-      const res = await UserService.getAll();
-      const members = Array.isArray(res.data) ? res.data : [];
-      return members.length;
-    }
-  })
-
-  // const shiftDataSize = useQuery({
-  //   queryKey: ["/shifts"],
-  //   queryFn: async() => {
-  //     const res = await ShiftService.getAll();
-  //     const shifts2 = Array.isArray(res.data) ? res.data : [];
-  //     return shifts2.length;
-  //   }
-  // })
+};
   
   const { data: stats, isLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
   });
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="stats-cards-loading">
-  //       {Array.from({ length: 4 }).map((_, i) => (
-  //         <Card key={i}>
-  //           <CardContent className="p-6">
-  //             <Skeleton className="h-4 w-24 mb-2" />
-  //             <Skeleton className="h-8 w-16 mb-4" />
-  //             <Skeleton className="h-3 w-32" />
-  //           </CardContent>
-  //         </Card>
-  //       ))}
-  //     </div>
-  //   );
-  // }
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="stats-cards-loading">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-6">
+              <Skeleton className="h-4 w-24 mb-2" />
+              <Skeleton className="h-8 w-16 mb-4" />
+              <Skeleton className="h-3 w-32" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
-  if (user?.type === "admin") {
+  if (user?.role === "admin") {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="admin-stats-cards">
         <Card>
@@ -66,8 +45,7 @@ export default function StatsCards() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Employees</p>
                 <p className="text-2xl font-bold text-foreground" data-testid="total-employees">
-                  {/* {(user as any)?.totalEmployees || 0} */}
-                  {userDataSize.data ?? 0}
+                  {(stats as any)?.totalEmployees || 0}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -115,7 +93,7 @@ export default function StatsCards() {
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
-              <span className="text-muted-foreground">3 locations running</span>
+              <span className="text-muted-foreground">3 departments running</span>
             </div>
           </CardContent>
         </Card>
