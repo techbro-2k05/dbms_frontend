@@ -45,6 +45,14 @@ export default function AdminUserManagement(){
   };
 
   return (
+    <div>
+    <div className="absolute top-14 right-14 z-10">
+          <Button asChild variant="outline" className="text-sm">
+          <a href="/admin-dashboard">
+                            &larr; Back
+                        </a>
+                    </Button>
+        </div>
     <Card>
       <CardHeader>
         <CardTitle>User Directory</CardTitle>
@@ -155,5 +163,6 @@ export default function AdminUserManagement(){
         </Table>
       </CardContent>
     </Card>
+    </div>
   );
 }

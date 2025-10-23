@@ -8,19 +8,48 @@ import { Form, FormField, FormItem, FormLabel, FormMessage, FormControl } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
-export default function NewShiftForm() {
+import { User } from "@shared/schema";
+import WeeklyShiftForm from "./assign-weekly";
+import { MultiSelect } from "../ui/multi-select";
+interface ShiftProps {
+  user: User | null;
+}
+const LOC_OPTIONS = [
+  { label: "Mumbai", value: 1 },
+  { label: "Delhi", value: 2 },
+  { label: "Noida", value: 3 },
+  { label: "Banglore", value: 4 },
+  // ... add more roles as integers
+];
+
+const ROLE_OPTIONS = [
+  { label: "Role A", value: 1 },
+  { label: "Role B", value: 2 },
+  { label: "Role C", value: 3 },
+  { label: "Role D", value: 4 },
+  // ... add more roles as integers
+];
+export default function NewShiftForm({ user }: ShiftProps) {
   const [showForm, setShowForm] = useState(false);
   const { data: users = [] } = useQuery<any[]>({
     queryKey: ["/api/users"],
   });
+  const LOC_OPTIONS = [
+  { label: "Mumbai", value: 1 },
+  { label: "Delhi", value: 2 },
+  { label: "Noida", value: 3 },
+  { label: "Banglore", value: 4 },
+  // ... add more roles as integers
+];
 
   const form = useForm({
     defaultValues: {
       title: "",
-      date: "",
+      day: "",
       startTime: "",
-      duration: "",
-      assignedUserIds: [] as string[],
+      endTime: "",
+      locationId: 0,
+      requirements: [] as object[],
     },
   });
 
@@ -39,12 +68,13 @@ export default function NewShiftForm() {
   const onSubmit = (data: any) => {
     createShiftMutation.mutate(data);
   };
-
+  if(user?.type === "MANAGER"){
   return (
     <Card data-testid="new-shift-form">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>New Shift Allocation</CardTitle>
+          <WeeklyShiftForm user={user}/>
           <Dialog open={showForm} onOpenChange={setShowForm}>
             <DialogTrigger asChild>
               <Button variant="outline">Allocate Shift</Button>
@@ -70,7 +100,7 @@ export default function NewShiftForm() {
                   />
                   <FormField
                     control={form.control}
-                    name="date"
+                    name="day"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Date</FormLabel>
@@ -96,45 +126,64 @@ export default function NewShiftForm() {
                   />
                   <FormField
                     control={form.control}
-                    name="duration"
+                    name="endTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Duration (hours)</FormLabel>
+                        <FormLabel>End Time</FormLabel>
                         <FormControl>
-                          <Input type="number" min={1} {...field} required />
+                          <Input type="time" {...field} required />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  {/* <FormField
+                  
+                  <FormField
                     control={form.control}
-                    name="assignedUserIds"
+                    name="locationId"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Assign Users</FormLabel>
-                        <div className="grid grid-cols-2 gap-2">
-                          {users.map((user) => (
-                            <label key={user.id} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                checked={field.value.includes(user.id)}
-                                onChange={() => {
-                                  if (field.value.includes(user.id)) {
-                                    field.onChange(field.value.filter((id: string) => id !== user.id));
-                                  } else {
-                                    field.onChange([...field.value, user.id]);
-                                  }
-                                }}
-                              />
-                              <span>{user.name} ({user.role})</span>
-                            </label>
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
+                        <FormItem className="flex flex-col">
+                            <FormLabel>Location ID</FormLabel>
+                      <FormControl>
+                                <select 
+                                    {...field} 
+                                    value={String(field.value || "")} 
+                                    onChange={(e) => field.onChange(Number(e.target.value) || null)}
+                                    className="p-2 border rounded" // Add any necessary styling (e.g., Tailwind)
+                                >
+                                    <option value="" disabled>Select a location</option>
+                                    {/* Render options from your array */}
+                                    {LOC_OPTIONS.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
                     )}
-                  /> */}
+                />
+                          <FormField  
+                                control={form.control}
+                                name="requirements"
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-col">
+                                    <FormLabel>Feasible Roles</FormLabel>
+                                    <FormControl>
+                                      <MultiSelect
+                                        options={ROLE_OPTIONS}
+                                        // The field.value is the current array of integers from RHF
+                                        value={ Object.assign(field.value,0) || []} 
+                                        // RHF's onChange receives the new array from the MultiSelect component
+                                        onChange={field.onChange} 
+                                        placeholder="Select applicable roles"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
                   <Button type="submit" className="w-full" disabled={createShiftMutation.isPending}>
                     {createShiftMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Allocate Shift
@@ -150,4 +199,18 @@ export default function NewShiftForm() {
       </CardContent>
     </Card>
   );
+}  else if(user?.type === "ADMIN"){
+  return(
+  <Card data-testid="new-shift-form">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>New Shift Allocation</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-muted-foreground">Create and assign new shifts to users. All fields are required.</div>
+      </CardContent>
+    </Card>
+  );
+}
 }

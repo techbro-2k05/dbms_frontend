@@ -25,6 +25,7 @@ export const users = pgTable("users", {
   allowedPaidLeaves:integer("allowed_paid_leaves").notNull().default(100),
   allowedHours: integer("allowed_hours").notNull().default(0),
   gender: text("gender").notNull(),
+  feasibleRoles: integer("feasible_roles").array().notNull().default(sql`'{}'::integer[]`),
   // role: text("position"),
   // createdAt: timestamp("created_at").defaultNow(),
 });
@@ -67,7 +68,7 @@ export const attendance = pgTable("attendance", {
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
-  createdAt: true,
+  // createdAt: true,
 }).extend({
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["worker", "supervisor", "admin"]),

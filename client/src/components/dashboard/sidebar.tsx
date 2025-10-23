@@ -42,7 +42,7 @@ export default function Sidebar({ user }: SidebarProps) {
       { name: "Wage", icon: BarChart3, href: "/wage" },
       // { name: "Settings", icon: Settings, href: // "/settings" },
     ];
-  } else if (user.type === "ADMIN" || user.type === "supervisor") {
+  } else if (user.type === "ADMIN" || user.type === "MANAGER") {
     navigation = [
       { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard", current: true },
       { name: "Leave Approval", icon: CalendarX, href: "/leave-approval" },
@@ -99,8 +99,8 @@ export default function Sidebar({ user }: SidebarProps) {
             <p className="text-xs text-muted-foreground" data-testid="user-role">
               {user.type === "ADMIN"
                 ? "Administrator"
-                : user.type === "SUPERVISOR"
-                ? "SUPERVISOR"
+                : user.type === "MANAGER"
+                ? "Manager"
                 : "Factory Worker"}
             </p>
           </div>

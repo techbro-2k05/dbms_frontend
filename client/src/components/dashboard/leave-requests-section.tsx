@@ -13,7 +13,21 @@ import LeaveRequestForm from "@/components/forms/leave-request-form";
 import { format } from "date-fns";
 
 export default function LeaveRequestsSection() {
-  const { user } = useAuth();
+  // const { user } = useAuth();
+  const user = {
+      id:1234,
+      fname: "aa",
+      mname: "bb",
+      lname: "cc",
+      type: "MANAGER",
+      phone:"",
+      gender: "MALE",//"MALE" or "FEMALE"
+      allowedPaidLeaves:0,
+      allowedHours: 0,
+      worksAt: 0,  
+      password: "admin123", // hash in production!
+      feasibleRoles:[],
+};
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   
@@ -65,11 +79,19 @@ export default function LeaveRequestsSection() {
   };
 
   return (
+    <div>
+    <div className="absolute top-4 right-4 z-10">
+    <Button asChild variant="outline" className="text-sm">
+    <a href="/dashboard">
+                            &larr; Back
+                        </a>
+                    </Button>
+    </div>
     <Card data-testid="leave-requests-section">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle data-testid="leave-requests-title">
-            {user?.type === "admin" ? "Leave Requests" : "My Leave Requests"}
+            {(user?.type === "ADMIN" || user?.type ==="MANAGER") ? "Leave Requests" : "My Leave Requests"}
           </CardTitle>
           {user?.type === "worker" && (
             <Dialog open={showForm} onOpenChange={setShowForm}>
@@ -184,5 +206,6 @@ export default function LeaveRequestsSection() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }

@@ -12,7 +12,7 @@ import NotFound from "@/pages/not-found";
 import WorkerDashboard from "@/pages/worker-dashboard";
 import Wage from "@/pages/wage";
 import LeaveRequest from "@/pages/leave-request";
-import SupervisorDashboard from "@/pages/supervisor-dashboard";
+// import SupervisorDashboard from "@/pages/manager-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import LeaveApproval from "@/pages/leave-approval";
 import NewShift from "@/pages/new-shift";
@@ -26,16 +26,16 @@ function Router() {
       <Route path="/" component={AdminDashboard}></Route>
       <Route path="/auth" component={AuthPage} />
   <Route path="/worker-dashboard" component={WorkerDashboard} />
+  <Route path="/dashboard" component={Dashboard} />
   <Route path="/wage" component={Wage} />
   <Route path="/leave-request" component={LeaveRequest} />
-  <Route path="/supervisor-dashboard" component={SupervisorDashboard} />
+  <Route path="/manager-dashboard" component={AdminDashboard} />
   <Route path="/admin-dashboard" component={AdminDashboard} />
   <Route path="/leave-approval" component={LeaveApproval} />
-  <Route path="/new-shift" component={NewShift} />
   <Route path="/edit-user" component={EditUser} />
   <Route path="/add-user" component={AddUser} />
   <Route path="/edit-worker-details" component={EditWorkerDetails} />
-      <Route component={NotFound} />
+  <Route component={NotFound} />
     </Switch>
   );
 }

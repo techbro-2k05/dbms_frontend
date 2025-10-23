@@ -46,9 +46,9 @@ export default function ShiftsSection() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle data-testid="shifts-title">
-            {user?.role === "admin" ? "Today's Shifts" : "My Upcoming Shifts"}
+            {user?.type === "admin" ? "Today's Shifts" : "My Upcoming Shifts"}
           </CardTitle>
-          {user?.role === "normal" && (
+          {user?.type === "normal" && (
             <Button variant="link" size="sm" data-testid="button-view-all-shifts">
               View All
             </Button>
@@ -87,7 +87,7 @@ export default function ShiftsSection() {
                     <p className="text-sm text-muted-foreground" data-testid={`shift-time-${shift.id}`}>
                       {format(new Date(shift.startTime), "HH:mm")} - {format(new Date(shift.endTime), "HH:mm")}
                     </p>
-                    {user?.role === "admin" && shift.assignedUser && (
+                    {user?.type === "ADMIN" && shift.assignedUser && (
                       <p className="text-xs text-muted-foreground" data-testid={`shift-employee-${shift.id}`}>
                         Assigned: {shift.assignedUser.name}
                       </p>

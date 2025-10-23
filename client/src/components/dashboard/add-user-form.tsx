@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/form";
 import { UserService } from "@/services/api";
 import Sidebar from "./sidebar";
-
+import { features } from "process";
+import { MultiSelect } from "@/components/ui/multi-select";
 type FormValues = {
   fname: string;
   mname: string;
@@ -26,8 +27,15 @@ type FormValues = {
   allowedPaidLeaves: number;
   allowedHours: number;
   worksAt?: number;
+  feasibleRoles?: number[];
 };
-
+const ROLE_OPTIONS = [
+  { label: "Role A", value: 1 },
+  { label: "Role B", value: 2 },
+  { label: "Role C", value: 3 },
+  { label: "Role D", value: 4 },
+  // ... add more roles as integers
+];
 export default function AddUserForm() {
   const form = useForm<FormValues>({
     defaultValues: {
@@ -41,6 +49,7 @@ export default function AddUserForm() {
       allowedPaidLeaves:0,
       allowedHours: 0,
       worksAt: 0,
+      feasibleRoles: [],
     },
   });
 
@@ -59,6 +68,7 @@ export default function AddUserForm() {
         allowedPaidLeaves:values.allowedPaidLeaves,
         allowedHours: values.allowedHours,
         worksAt: values.worksAt,
+        feasibleRoles: values.feasibleRoles || [],
       };
 
       await UserService.create(payload);
@@ -71,10 +81,6 @@ export default function AddUserForm() {
       alert("Failed to create user: " + msg);
     }
   };
-
-
-
-
   return (
     <div>
 
@@ -218,6 +224,26 @@ export default function AddUserForm() {
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
                       <Input {...field} required />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="feasibleRoles" // Must match the field name in your form schema
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Feasible Roles</FormLabel>
+                    <FormControl>
+                      <MultiSelect
+                        options={ROLE_OPTIONS}
+                        // The field.value is the current array of integers from RHF
+                        value={field.value || []} 
+                        // RHF's onChange receives the new array from the MultiSelect component
+                        onChange={field.onChange} 
+                        placeholder="Select applicable roles"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

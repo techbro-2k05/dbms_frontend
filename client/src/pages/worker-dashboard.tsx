@@ -20,6 +20,7 @@ export default function WorkerDashboard() {
       allowedHours: 0,
       worksAt: 0,  
       password: "admin123", // hash in production!
+      feasibleRoles:[],
 };
   if (!user || user.type !== "MEMBER") return null;
 
