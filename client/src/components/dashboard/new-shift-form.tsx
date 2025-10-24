@@ -290,7 +290,7 @@ export default function NewShiftForm({ user }: ShiftProps) {
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Start Time</FormLabel>
-                                                        <FormControl><Input type="time" {...field} required /></FormControl>
+                                                        <FormControl><Input type="time" step="1" {...field} required /></FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -302,7 +302,7 @@ export default function NewShiftForm({ user }: ShiftProps) {
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>End Time</FormLabel>
-                                                        <FormControl><Input type="time" {...field} required /></FormControl>
+                                                        <FormControl><Input type="time" step="1" {...field} required /></FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
