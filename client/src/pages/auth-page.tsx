@@ -13,7 +13,8 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Factory } from "lucide-react";
-
+import { UserService } from "@/services/api";
+import { Navigate } from 'react-router-dom';
 const loginSchema = z.object({
    id: z.coerce.number({
       required_error: "ID is required", // Use required_error for empty/missing
@@ -21,6 +22,11 @@ const loginSchema = z.object({
   }).positive("ID must be positive"), 
   password: z.string().min(1, "Password is required"),
 });
+
+type loginValues = {
+  id: number;
+  password: string;
+};
 
 // const registerSchema = z.object({
 //   name: z.string().min(1, "Full name is required"),
@@ -49,29 +55,30 @@ export default function AuthPage() {
       password: "",
     },
   });
-
-  // const registerForm = useForm<RegisterData>({
-  //   resolver: zodResolver(registerSchema),
-  //   defaultValues: {
-  //     name: "",
-  //     username: "",
-  //     password: "",
-  //     confirmPassword: "",
-  //     type: "worker",
-  //     department: "",
-  //     position: "",
-  //   },
-  // });
-
-  // Redirect if already authenticated
   if (user) {
     return <Redirect to="/" />;
   }
-
   const onLogin = (data: LoginData) => {
     loginMutation.mutate(data);
   };
-
+  const onSubmit= async(values: loginValues)=>{
+     try {
+          // The number input issue must be fixed on the field level as shown in the previous answer.
+          // Assuming you will implement the custom onChange logic for number fields later.
+          const payload = {
+            is:values.id,
+            password: values.password?.trim(),
+          };
+          await UserService.create(payload);
+          alert("Signed in successfully");
+          return <Navigate to="/" replace={true} />;
+        } catch (error: any) {
+          console.error("Create user failed:", error);
+          const msg =
+            error?.response?.data?.message || error?.message || "Unknown error";
+          alert("Failed to create user: " + msg);
+        }
+      };
   // const onRegister = (data: RegisterData) => {
   //   const { confirmPassword, ...registerData } = data;
   //   registerMutation.mutate(registerData);
@@ -133,14 +140,8 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={loginMutation.isPending}
-                        data-testid="button-login"
-                      >
-                        {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Sign In
+                      <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
+                        {loginForm.formState.isSubmitting ? "Adding..." : "Add User"}
                       </Button>
                     </form>
                   </Form>
@@ -155,145 +156,6 @@ export default function AuthPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-
-            {/* <TabsContent value="register" data-testid="register-tab">
-              <Card>
-                <CardHeader>
-                  <CardTitle data-testid="register-title">Create Account</CardTitle>
-                  <CardDescription data-testid="register-description">
-                    Register as a new employee
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4" data-testid="register-form">
-                    <FormField
-                      control={registerForm.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Designation</FormLabel>
-                          <FormControl>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || "worker"}>
-                              <SelectTrigger data-testid="select-role">
-                                <SelectValue placeholder="Select designation" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="worker">Worker</SelectItem>
-                                <SelectItem value="supervisor">Supervisor</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                      <FormField
-                        control={registerForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter your full name" {...field} data-testid="input-name" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Choose a username" {...field} data-testid="input-register-username" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="department"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Department</FormLabel>
-                              <FormControl>
-                                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                                  <SelectTrigger data-testid="select-department">
-                                    <SelectValue placeholder="Select department" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Production">Production</SelectItem>
-                                    <SelectItem value="Quality Control">Quality Control</SelectItem>
-                                    <SelectItem value="Maintenance">Maintenance</SelectItem>
-                                    <SelectItem value="Administration">Administration</SelectItem>
-                                    <SelectItem value="Security">Security</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="position"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Position</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Job title" {...field} value={field.value || ""} data-testid="input-position" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Create a password" {...field} data-testid="input-register-password" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirm Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Confirm your password" {...field} data-testid="input-confirm-password" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={registerMutation.isPending}
-                        data-testid="button-register"
-                      >
-                        {registerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Create Account
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </TabsContent> */}
           </Tabs>
         </div>
       </div>
