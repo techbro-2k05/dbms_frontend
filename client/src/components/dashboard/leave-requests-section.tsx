@@ -11,7 +11,11 @@ import { useToast } from "@/hooks/use-toast";
 import LeaveRequestForm from "@/components/forms/leave-request-form";
 import { format } from "date-fns";
 
-export default function LeaveRequestsSection() {
+type LeaveRequestsSectionProps = {
+  hideBackButton?: boolean;
+};
+
+export default function LeaveRequestsSection({ hideBackButton = false }: LeaveRequestsSectionProps) {
   // const { user } = useAuth();
   const user = {
       id:1234,
@@ -30,7 +34,7 @@ export default function LeaveRequestsSection() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   
-  const { data: requests, isLoading } = useQuery({
+  const { data: requests = [], isLoading } = useQuery({
     queryKey: ["/api/leave-requests"],
   });
 
@@ -79,13 +83,13 @@ export default function LeaveRequestsSection() {
 
   return (
     <div>
-    <div className="absolute top-4 right-4 z-10">
-    <Button asChild variant="outline" className="text-sm">
-    <a href="/dashboard">
-                            &larr; Back
-                        </a>
-                    </Button>
-    </div>
+    {!hideBackButton && (
+      <div className="absolute top-4 right-4 z-10">
+        <Button asChild variant="outline" className="text-sm">
+          <a href="/dashboard">&larr; Back</a>
+        </Button>
+      </div>
+    )}
     <Card data-testid="leave-requests-section">
       <CardHeader>
         <div className="flex items-center justify-between">

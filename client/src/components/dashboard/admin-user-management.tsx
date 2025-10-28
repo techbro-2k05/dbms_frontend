@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { queryClient } from "@/lib/queryClient";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 type AdminUserManagementProps = {
   hideBackButton?: boolean;
@@ -27,6 +28,18 @@ export default function AdminUserManagement({ hideBackButton = false, className 
   });
   
   const users = Array.isArray(members) ? members : [];
+  
+  // ---- Filters state ----
+  const [typeFilter, setTypeFilter] = useState<string>("ALL"); // ALL | ADMIN | MANAGER | MEMBER
+  const [locationFilter, setLocationFilter] = useState<string>(""); // exact worksAt match
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((u: any) => {
+      const typeOk = typeFilter === "ALL" ? true : String(u.type) === typeFilter;
+      const locOk = locationFilter.trim() === "" ? true : String(u.worksAt ?? "") === locationFilter.trim();
+      return typeOk && locOk;
+    });
+  }, [users, typeFilter, locationFilter]);
   const [editUserId, setEditUserId] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
 
@@ -107,6 +120,39 @@ export default function AdminUserManagement({ hideBackButton = false, className 
         <CardTitle className="font-display text-3xl title-gradient">User Directory</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Filters */}
+        <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-muted-foreground">User Type</label>
+            <select
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+            >
+              <option value="ALL">All</option>
+              <option value="ADMIN">ADMIN</option>
+              <option value="MANAGER">MANAGER</option>
+              <option value="MEMBER">MEMBER</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-muted-foreground">Location ID</label>
+            <Input
+              placeholder="e.g. 1"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value.replace(/[^0-9]/g, ""))}
+            />
+          </div>
+          <div className="flex items-end">
+            <Button
+              variant="outline"
+              onClick={() => { setTypeFilter("ALL"); setLocationFilter(""); }}
+            >
+              Reset Filters
+            </Button>
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-12 w-full" />
@@ -125,11 +171,12 @@ export default function AdminUserManagement({ hideBackButton = false, className 
                 <TableHead>Location ID</TableHead>
                 <TableHead>Gender</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Feasible Roles</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="[&>tr:nth-child(odd)]:bg-muted/20">
-              {users.map((user: any) => (
+              {filteredUsers.map((user: any) => (
                 <TableRow key={user.id}>
                   <TableCell>
                     {user.id}
@@ -199,6 +246,19 @@ export default function AdminUserManagement({ hideBackButton = false, className 
                     )}
                   </TableCell>
                   <TableCell>
+                    {String(user.type) === "MEMBER" && Array.isArray(user.feasibleRoles) && user.feasibleRoles.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {user.feasibleRoles.map((rid: number, idx: number) => (
+                          <Badge key={`${user.id}-role-${idx}`} variant="secondary">
+                            {roleLabel(rid)} #{rid}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex gap-2">
                       {editUserId === user.id ? (
                         <>
@@ -243,4 +303,21 @@ export default function AdminUserManagement({ hideBackButton = false, className 
     </Card>
     </div>
   );
+}
+
+// --- Role label helper ---
+const ROLE_LABELS: Record<number, string> = {
+  1: "MANAGER",
+  2: "ELECTRICIAN",
+  3: "CARPENTER",
+  4: "PLUMBER",
+  5: "SECURITY_GUARD",
+  6: "CLEANER",
+  7: "RECEPTIONIST",
+  8: "SUPERVISOR",
+  9: "TECHNICIAN",
+};
+
+function roleLabel(id: number): string {
+  return ROLE_LABELS[id] || `ROLE_${id}`;
 }

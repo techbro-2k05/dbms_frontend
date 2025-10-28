@@ -53,8 +53,7 @@ export default function Sidebar({ user }: SidebarProps) {
     navigation = [
       { name: "Dashboard", icon: LayoutDashboard, href: "/manager-dashboard", current: true },
       { name: "Leave Approval", icon: CalendarX, href: "/leave-approval" },
-      { name: "Edit User Details", icon: Users, href: "/edit-user" },
-      // { name: "Settings", icon: Settings, href: "/setti// ngs" },
+      // { name: "Settings", icon: Settings, href: "/settings" },
     ];
   }
 
@@ -97,21 +96,33 @@ export default function Sidebar({ user }: SidebarProps) {
       
       {/* User Profile */}
       <div className="p-4 border-t border-border">
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-            <UserIcon className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground" data-testid="user-name">{user.fname}</p>
-            <p className="text-xs text-muted-foreground" data-testid="user-role">
-              {user.type === "ADMIN"
-                ? "Administrator"
-                : user.type === "MANAGER"
-                ? "Manager"
-                : "Factory Worker"}
-            </p>
-          </div>
-        </div>
+        {(() => {
+          const canViewProfile = user.type === "MANAGER" || user.type === "MEMBER";
+          const inner = (
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                <UserIcon className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground" data-testid="user-name">{user.fname}</p>
+                <p className="text-xs text-muted-foreground" data-testid="user-role">
+                  {user.type === "ADMIN"
+                    ? "Administrator"
+                    : user.type === "MANAGER"
+                    ? "Manager"
+                    : "Factory Worker"}
+                </p>
+              </div>
+            </div>
+          );
+          return canViewProfile ? (
+            <Link href="/profile" className="block hover:bg-accent hover:text-accent-foreground rounded-md px-2 -mx-2">
+              {inner}
+            </Link>
+          ) : (
+            inner
+          );
+        })()}
         <Button 
           variant="outline" 
           size="sm" 

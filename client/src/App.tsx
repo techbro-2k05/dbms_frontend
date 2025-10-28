@@ -17,6 +17,8 @@ import LeaveApproval from "@/pages/leave-approval";
 import EditUser from "@/pages/edit-user";
 import EditWorkerDetails from "@/pages/edit-worker-details";
 import { AuthProvider } from "./hooks/AuthContext";
+import Profile from "./pages/profile";
+import NotificationsPage from "./pages/notifications";
 
 function Router() {
   return (
@@ -39,6 +41,16 @@ function Router() {
         path="/worker-dashboard" 
         component={WorkerDashboard}
         allowedRoles={["MEMBER"]}
+      />
+      <ProtectedRoute 
+        path="/profile" 
+        component={Profile}
+        allowedRoles={["MANAGER", "MEMBER"]}
+      />
+      <ProtectedRoute 
+        path="/notifications" 
+        component={NotificationsPage}
+        allowedRoles={["ADMIN", "MANAGER", "MEMBER"]}
       />
       
       {/* Other protected routes (any authenticated user can access) */}

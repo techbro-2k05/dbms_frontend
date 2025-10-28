@@ -26,7 +26,7 @@ export default function WorkerDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
             <div className="lg:col-span-2 space-y-6">
               <ShiftsSection /> {/* Upcoming shifts and details */}
-              <LeaveRequestsSection /> {/* Leave and overtime requests */}
+              <LeaveRequestsSection hideBackButton /> {/* Leave and overtime requests */}
             </div>
             <div className="space-y-6">
               <QuickActions /> {/* Request leave/overtime, clock in/out, view schedule */}

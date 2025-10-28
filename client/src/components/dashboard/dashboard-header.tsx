@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 import { Calendar, Clock, Bell } from "lucide-react";
 
 export default function DashboardHeader() {
@@ -48,8 +49,10 @@ export default function DashboardHeader() {
             <Clock className="w-4 h-4" />
             <span data-testid="current-time">{formatTime(currentTime)}</span>
           </div>
-          <Button variant="ghost" size="sm" data-testid="button-notifications">
-            <Bell className="w-4 h-4" />
+          <Button asChild variant="ghost" size="sm" data-testid="button-notifications">
+            <Link href="/notifications">
+              <Bell className="w-4 h-4" />
+            </Link>
           </Button>
         </div>
       </div>
