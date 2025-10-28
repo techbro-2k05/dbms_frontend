@@ -1,7 +1,6 @@
-import { User } from "@shared/schema";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useAuth, Member } from "@/hooks/AuthContext";
 import { 
   Factory, 
   LayoutDashboard, 
@@ -18,7 +17,7 @@ import {
 
 
 interface SidebarProps {
-  user: User | null;
+  user: Member | null;
 }
 
 type NavItem = {
@@ -29,7 +28,8 @@ type NavItem = {
 };
 
 export default function Sidebar({ user }: SidebarProps) {
-  const { logoutMutation } = useAuth();
+  const { logout } = useAuth();
+  
   if (!user) {
     return null;
   }
@@ -109,8 +109,7 @@ export default function Sidebar({ user }: SidebarProps) {
           variant="outline" 
           size="sm" 
           className="w-full"
-          onClick={() => logoutMutation.mutate()}
-          disabled={logoutMutation.isPending}
+          onClick={logout}
           data-testid="button-logout"
         >
           <LogOut className="w-4 h-4 mr-2" />

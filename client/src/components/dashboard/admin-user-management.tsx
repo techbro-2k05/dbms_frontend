@@ -4,34 +4,68 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
-// import AddUserForm from "@/components/dashboard/add-user-form";
+import { queryClient } from "@/lib/queryClient";
+import api from "@/services/api";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export default function AdminUserManagement(){
-  // const { user } = useAuth();
-  const { data, isLoading } = useQuery({
-    queryKey: ["/api/members"],
+export default function AdminUserManagement() {
+  const { toast } = useToast();
+  
+  // Fetch all members from backend
+  const { data: members, isLoading } = useQuery({
+    queryKey: ["/members"],
+    queryFn: async () => {
+      const response = await api.get('/members');
+      return response.data;
+    },
   });
-  const users = Array.isArray(data) ? data : [];
-  const [editUserId, setEditUserId] = useState<string | null>(null);
+  
+  const users = Array.isArray(members) ? members : [];
+  const [editUserId, setEditUserId] = useState<number | null>(null);
   const [editData, setEditData] = useState<any>({});
 
+  // Update user mutation - PUT /members/{id}
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, ...data }: any) => {
-      const res = await apiRequest("PATCH", `/api/employees/${id}`, data);
-      return res.json();
+      const response = await api.put(`/members/${id}`, data);
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ["/members"] });
       setEditUserId(null);
+      toast({
+        title: "Success",
+        description: "User updated successfully!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.message || "Failed to update user",
+      });
     },
   });
 
+  // Delete user mutation - DELETE /members/{id}
   const deleteUserMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/employees/${id}`);
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+    mutationFn: async (id: number) => {
+      await api.delete(`/members/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/members"] });
+      toast({
+        title: "Success",
+        description: "User deleted successfully!",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error?.response?.data?.message || "Failed to delete user",
+      });
     },
   });
 
@@ -58,109 +92,175 @@ export default function AdminUserManagement(){
         <CardTitle>User Directory</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {/* fname: "",
-              mname: "",
-              lname: "",
-              password: "",
-              type: "MEMBER",
-              phone:"",
-              gender: "MALE",//"MALE" or "FEMALE"
-              allowedPaidLeaves:0,
-              allowedHours: 0,
-              worksAt: 0, */}
-              <TableHead>First Name</TableHead>
-              <TableHead>Last Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Location_ID</TableHead>
-              <TableHead>Allowed Hourse</TableHead>
-              <TableHead>Allowed Paid leaves</TableHead>
-              <TableHead>Gender</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Password</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user: any) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Input value={editData.name} onChange={e => setEditData({ ...editData, fname: e.target.value })} />
-                  ) : (
-                    user.fname
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Input value={editData.name} onChange={e => setEditData({ ...editData, lname: e.target.value })} />
-                  ) : (
-                    user.lname
-                  )}
-                </TableCell>
-                {/* <TableCell>{user.username}</TableCell> */}
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Input value={editData.type} onChange={e => setEditData({ ...editData, type: e.target.value })} />
-                  ) : (
-                    user.type
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Input value={editData.location} onChange={e => setEditData({ ...editData, worksAt: e.target.value })} />
-                  ) : (
-                    user.worksAt
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Input value={editData.role} onChange={e => setEditData({ ...editData, allowedHours: e.target.value })} />
-                  ) : (
-                    user.allowedHours
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Input value={editData.role} onChange={e => setEditData({ ...editData, allowedPaidLeaves: e.target.value })} />
-                  ) : (
-                    user.allowedPaidLeaves
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Input value={editData.role} onChange={e => setEditData({ ...editData, gender: e.target.value })} />
-                  ) : (
-                    user.gender
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Input value={editData.role} onChange={e => setEditData({ ...editData, phone: e.target.value })} />
-                  ) : (
-                    user.phone
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Input value={editData.role} onChange={e => setEditData({ ...editData, password: e.target.value })} />
-                  ) : (
-                    user.password
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editUserId === user.id ? (
-                    <Button size="sm" onClick={handleSave}>Save</Button>
-                  ) : (
-                    <Button size="sm" variant="outline" onClick={() => handleEdit(user)}>Edit</Button>
-                  )}
-                  <Button size="sm" variant="destructive" onClick={() => deleteUserMutation.mutate(user.id)} className="ml-2">Delete</Button>
-                </TableCell>
+        {isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        ) : users.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">No users found</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>First Name</TableHead>
+                <TableHead>Middle Name</TableHead>
+                <TableHead>Last Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Location ID</TableHead>
+                <TableHead>Gender</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+              </TableHeader>
+            <TableBody>
+              {users.map((user: any) => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.id}</TableCell>
+                  <TableCell>
+                    {editUserId === user.id ? (
+                      <Input 
+                        value={editData.fname} 
+                        onChange={e => setEditData({ ...editData, fname: e.target.value })} 
+                      />
+                    ) : (
+                      user.fname
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editUserId === user.id ? (
+                      <Input 
+                        value={editData.mname} 
+                        onChange={e => setEditData({ ...editData, mname: e.target.value })} 
+                      />
+                    ) : (
+                      user.mname
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editUserId === user.id ? (
+                      <Input 
+                        value={editData.lname} 
+                        onChange={e => setEditData({ ...editData, lname: e.target.value })} 
+                      />
+                    ) : (
+                      user.lname
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editUserId === user.id ? (
+                      <Input 
+                        value={editData.type} 
+                        onChange={e => setEditData({ ...editData, type: e.target.value })} 
+                      />
+                    ) : (
+                      user.type
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editUserId === user.id ? (
+                      <Input 
+                        type="number"
+                        value={editData.worksAt} 
+                        onChange={e => setEditData({ ...editData, worksAt: parseInt(e.target.value) })} 
+                      />
+                    ) : (
+                      user.worksAt
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editUserId === user.id ? (
+                      <Input 
+                        type="number"
+                        value={editData.allowedHours} 
+                        onChange={e => setEditData({ ...editData, allowedHours: parseInt(e.target.value) })} 
+                      />
+                    ) : (
+                      user.allowedHours
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editUserId === user.id ? (
+                      <Input 
+                        type="number"
+                        value={editData.allowedPaidLeaves} 
+                        onChange={e => setEditData({ ...editData, allowedPaidLeaves: parseInt(e.target.value) })} 
+                      />
+                    ) : (
+                      user.allowedPaidLeaves
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editUserId === user.id ? (
+                      <Input 
+                        value={editData.gender} 
+                        onChange={e => setEditData({ ...editData, gender: e.target.value })} 
+                      />
+                    ) : (
+                      user.gender
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editUserId === user.id ? (
+                      <Input 
+                        value={editData.phone} 
+                        onChange={e => setEditData({ ...editData, phone: e.target.value })} 
+                      />
+                    ) : (
+                      user.phone
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      {editUserId === user.id ? (
+                        <>
+                          <Button 
+                            size="sm" 
+                            onClick={handleSave}
+                            disabled={updateUserMutation.isPending}
+                          >
+                            {updateUserMutation.isPending ? "Saving..." : "Save"}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setEditUserId(null)}
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleEdit(user)}
+                          >
+                            Edit
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to delete ${user.fname} ${user.lname}?`)) {
+                                deleteUserMutation.mutate(user.id);
+                              }
+                            }}
+                            disabled={deleteUserMutation.isPending}
+                          >
+                            {deleteUserMutation.isPending ? "Deleting..." : "Delete"}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
     </div>

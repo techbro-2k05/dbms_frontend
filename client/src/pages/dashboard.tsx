@@ -1,4 +1,3 @@
-import { useAuth } from "@/hooks/use-auth";
 import Sidebar from "@/components/dashboard/sidebar";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import StatsCards from "@/components/dashboard/stats-cards";

@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Settings, Wrench } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/AuthContext";
 
 export default function ShiftsSection() {
   const { user } = useAuth();
   
-  const { data: shifts, isLoading } = useQuery({
+  const { data: shifts = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/shifts"],
   });
 
@@ -46,9 +46,9 @@ export default function ShiftsSection() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle data-testid="shifts-title">
-            {user?.type === "admin" ? "Today's Shifts" : "My Upcoming Shifts"}
+            {user?.type === "ADMIN" ? "Today's Shifts" : "My Upcoming Shifts"}
           </CardTitle>
-          {user?.type === "normal" && (
+          {user?.type === "MEMBER" && (
             <Button variant="link" size="sm" data-testid="button-view-all-shifts">
               View All
             </Button>

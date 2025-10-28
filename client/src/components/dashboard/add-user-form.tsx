@@ -3,7 +3,9 @@ import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import Sidebar from "./sidebar";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import api from "@/services/api";
 import {
   Form,
   FormField,
@@ -12,9 +14,6 @@ import {
   FormMessage,
   FormControl,
 } from "@/components/ui/form";
-import { UserService } from "@/services/api";
-import Sidebar from "./sidebar";
-import { features } from "process";
 import { MultiSelect } from "@/components/ui/multi-select";
 type FormValues = {
   fname: string;
@@ -22,13 +21,14 @@ type FormValues = {
   lname: string;
   password: string;
   type: string;
-  phone:string;
-  gender: string;//"MALE" or "FEMALE"
+  phone: string;
+  gender: string; // "MALE" or "FEMALE"
   allowedPaidLeaves: number;
   allowedHours: number;
   worksAt?: number;
   feasibleRoles?: number[];
 };
+
 const ROLE_OPTIONS = [
   { label: "Role A", value: 1 },
   { label: "Role B", value: 2 },
@@ -36,7 +36,11 @@ const ROLE_OPTIONS = [
   { label: "Role D", value: 4 },
   // ... add more roles as integers
 ];
+
 export default function AddUserForm() {
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  
   const form = useForm<FormValues>({
     defaultValues: {
       fname: "",
@@ -55,30 +59,48 @@ export default function AddUserForm() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      // The number input issue must be fixed on the field level as shown in the previous answer.
-      // Assuming you will implement the custom onChange logic for number fields later.
+      // Prepare the RegisterMemberRequest payload matching backend structure
       const payload = {
         fname: values.fname?.trim(),
         mname: values.mname?.trim(),
         lname: values.lname?.trim(),
         password: values.password?.trim(),
         type: values.type?.trim(),
-        phone:values.phone?.trim(),
+        phone: values.phone?.trim(),
         gender: values.gender?.trim(),
-        allowedPaidLeaves:values.allowedPaidLeaves,
+        allowedPaidLeaves: values.allowedPaidLeaves,
         allowedHours: values.allowedHours,
         worksAt: values.worksAt,
         feasibleRoles: values.feasibleRoles || [],
       };
 
-      await UserService.create(payload);
-      alert("User created successfully");
+      // Send POST request to /members endpoint
+      const response = await api.post('/members', payload);
+      
+      toast({
+        title: "Success",
+        description: "User created successfully!",
+      });
+      
       form.reset();
+      
+      // Optional: Redirect back to admin dashboard or user list
+      setTimeout(() => {
+        setLocation("/admin-dashboard");
+      }, 1500);
+      
     } catch (error: any) {
       console.error("Create user failed:", error);
       const msg =
-        error?.response?.data?.message || error?.message || "Unknown error";
-      alert("Failed to create user: " + msg);
+        error?.response?.data?.message || 
+        error?.message || 
+        "Failed to create user";
+      
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: msg,
+      });
     }
   };
   return (

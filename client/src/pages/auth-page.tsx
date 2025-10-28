@@ -1,20 +1,23 @@
-import { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { Redirect } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+<<<<<<< Updated upstream
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Factory } from "lucide-react";
 import { UserService } from "@/services/api";
 import { Navigate } from 'react-router-dom';
+=======
+import { Factory } from "lucide-react";
+import { useAuth } from "@/hooks/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+>>>>>>> Stashed changes
 const loginSchema = z.object({
    id: z.coerce.number({
       required_error: "ID is required", // Use required_error for empty/missing
@@ -41,12 +44,14 @@ type loginValues = {
 //   path: ["confirmPassword"],
 // });
 
+
 type LoginData = z.infer<typeof loginSchema>;
-// type RegisterData = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { user, loginMutation} = useAuth();
   const [activeTab, setActiveTab] = useState("login");
+  const { login } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -55,6 +60,7 @@ export default function AuthPage() {
       password: "",
     },
   });
+<<<<<<< Updated upstream
   if (user) {
     return <Redirect to="/" />;
   }
@@ -83,6 +89,44 @@ export default function AuthPage() {
   //   const { confirmPassword, ...registerData } = data;
   //   registerMutation.mutate(registerData);
   // };
+=======
+
+  const onSubmit = async (values: loginValues) => {
+    try {
+      // Call the login function from AuthContext which uses auth.ts
+      const loggedInUser = await login(values.id, values.password);
+      console.log("Logged in user:", loggedInUser);
+      toast({
+        title: "Success",
+        description: "Logged in successfully!",
+      });
+      
+      // Redirect based on the user type returned from login
+      if (loggedInUser) {
+        console.log(loggedInUser.type);
+        if (loggedInUser.type === "ADMIN") {
+          setLocation("/admin-dashboard");
+        } else if (loggedInUser.type === "MANAGER") {
+          setLocation("/manager-dashboard");
+        } else if (loggedInUser.type === "MEMBER") {
+          setLocation("/worker-dashboard");
+        }
+      }
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      const msg =
+        error?.response?.data?.message || 
+        error?.message || 
+        "Invalid credentials";
+      
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: msg,
+      });
+    }
+  };
+>>>>>>> Stashed changes
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex">
@@ -113,7 +157,7 @@ export default function AuthPage() {
                 </CardHeader>
                 <CardContent>
                   <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4" data-testid="login-form">
+                    <form onSubmit={loginForm.handleSubmit(onSubmit)} className="space-y-4" data-testid="login-form">
                       <FormField
                         control={loginForm.control}
                         name="id"
@@ -141,7 +185,11 @@ export default function AuthPage() {
                         )}
                       />
                       <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
+<<<<<<< Updated upstream
                         {loginForm.formState.isSubmitting ? "Adding..." : "Add User"}
+=======
+                        {loginForm.formState.isSubmitting ? "logging in..." : "login"}
+>>>>>>> Stashed changes
                       </Button>
                     </form>
                   </Form>

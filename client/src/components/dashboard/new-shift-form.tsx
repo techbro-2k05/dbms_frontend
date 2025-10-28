@@ -8,9 +8,8 @@ import { Form, FormField, FormItem, FormLabel, FormMessage, FormControl } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Minus, Plus, Trash2 } from "lucide-react"; 
-import { User } from "@shared/schema";
+import { Member } from "@/hooks/AuthContext";
 // import WeeklyShiftForm from "./assign-weekly"; // Note: This line remains commented out as requested
-import { ShiftService } from "@/services/api";
 
 // --- EXTERNAL OPTIONS ---
 const LOC_OPTIONS = [
@@ -43,7 +42,7 @@ type FormValues = {
 };
 
 interface ShiftProps {
-    user: User | null;
+    user: Member | null;
 }
 
 // --- SELECT COMPONENT PLACEHOLDER (Using native select with Tailwind classes) ---
