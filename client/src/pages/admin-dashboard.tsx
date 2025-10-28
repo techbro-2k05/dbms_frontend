@@ -1,11 +1,7 @@
 import { useAuth } from "@/hooks/AuthContext";
 import Sidebar from "@/components/dashboard/sidebar";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
-import StatsCards from "@/components/dashboard/stats-cards";
-import AnalyticsSection from "@/components/dashboard/analytics-section";
-import NewShiftForm from "@/components/dashboard/new-shift-form";
-import CalendarWidget from "@/components/dashboard/calendar-widget";
-import AttendanceOverview from "@/components/dashboard/attendance-overview";
+import AdminUserManagement from "@/components/dashboard/admin-user-management";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -21,16 +17,15 @@ export default function AdminDashboard() {
       <Sidebar user={user} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader />
-        <main className="flex-1 overflow-auto p-6">
-          <StatsCards />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-            <div className="lg:col-span-2 space-y-6">
-              <AnalyticsSection />
-              <NewShiftForm user={user} />
-            </div>
-            <div className="space-y-6">
-              <AttendanceOverview /> {/* Attendance for all locations */}
-            </div>
+        <main className="flex-1 overflow-auto p-6 bg-gradient-to-br from-slate-50 via-indigo-50/60 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <section>
+              <h1 className="font-display text-4xl font-bold tracking-tight title-gradient">Admin Dashboard</h1>
+              <p className="mt-2 text-muted-foreground">Manage members, roles, and organization settings</p>
+            </section>
+
+            {/* Admin-focused content: manage users directly on the dashboard */}
+            <AdminUserManagement hideBackButton className="card-elevated" />
           </div>
         </main>
       </div>

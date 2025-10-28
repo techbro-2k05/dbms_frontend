@@ -1,9 +1,10 @@
 // components/ui/MultiSelect.tsx (or similar file)
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import { cn } from "@/lib/utils" // Utility function for conditional class names
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Command,
   CommandGroup,
@@ -58,9 +59,12 @@ export function MultiSelect({
   }
 
   // Get the labels of the selected items for display
-  const selectedLabels = value.map(
-    (v) => options.find((o) => o.value === v)?.label
-  ).filter(Boolean).join(", ")
+  const selectedOptions = options.filter((o) => value.includes(o.value))
+  const selectedLabels = selectedOptions.map((o) => o.label).join(", ")
+
+  const removeValue = (v: number) => {
+    onChange(value.filter((x) => x !== v))
+  }
   
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -69,12 +73,29 @@ export function MultiSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="w-full justify-between"
         >
-          {value.length > 0 ? selectedLabels : placeholder}
+          {value.length > 0 ? `Selected ${value.length}` : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
+      {value.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {selectedOptions.map((opt) => (
+            <Badge key={opt.value} variant="secondary" className="pr-1">
+              <span className="mr-1">{opt.label}</span>
+              <button
+                type="button"
+                aria-label={`Remove ${opt.label}`}
+                className="inline-flex rounded-full hover:text-destructive"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeValue(opt.value); }}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
       <PopoverContent className="w-[200px] p-0">
         <Command>
           <CommandList>

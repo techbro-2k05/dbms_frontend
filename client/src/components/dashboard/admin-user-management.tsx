@@ -9,7 +9,12 @@ import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function AdminUserManagement() {
+type AdminUserManagementProps = {
+  hideBackButton?: boolean;
+  className?: string;
+};
+
+export default function AdminUserManagement({ hideBackButton = false, className }: AdminUserManagementProps) {
   const { toast } = useToast();
   
   // Fetch all members from backend
@@ -51,9 +56,16 @@ export default function AdminUserManagement() {
   // Delete user mutation - DELETE /members/{id}
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      await api.delete(`/members/${id}`);
+      await api.delete(`/members/${id}`, { withCredentials: true });
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (deletedId: number) => {
+      // Optimistically remove the user from cache for snappier UX
+      queryClient.setQueryData(["/members"], (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.filter((u: any) => u.id !== deletedId);
+      });
+      // Also invalidate to refetch and stay authoritative
       queryClient.invalidateQueries({ queryKey: ["/members"] });
       toast({
         title: "Success",
@@ -61,10 +73,13 @@ export default function AdminUserManagement() {
       });
     },
     onError: (error: any) => {
+      const msg = error?.response?.status === 404
+        ? "User not found or already deleted"
+        : error?.response?.data?.message || "Failed to delete user";
       toast({
         variant: "destructive",
         title: "Error",
-        description: error?.response?.data?.message || "Failed to delete user",
+        description: msg,
       });
     },
   });
@@ -80,16 +95,16 @@ export default function AdminUserManagement() {
 
   return (
     <div>
-    <div className="absolute top-14 right-14 z-10">
-          <Button asChild variant="outline" className="text-sm">
-          <a href="/admin-dashboard">
-                            &larr; Back
-                        </a>
-                    </Button>
-        </div>
-    <Card>
-      <CardHeader>
-        <CardTitle>User Directory</CardTitle>
+    {!hideBackButton && (
+      <div className="absolute top-14 right-14 z-10">
+        <Button asChild variant="outline" className="text-sm">
+          <a href="/admin-dashboard">&larr; Back</a>
+        </Button>
+      </div>
+    )}
+    <Card className={className ? className : "card-elevated"}>
+      <CardHeader className="pb-4">
+        <CardTitle className="font-display text-3xl title-gradient">User Directory</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -101,59 +116,52 @@ export default function AdminUserManagement() {
         ) : users.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">No users found</p>
         ) : (
-          <Table>
-            <TableHeader>
+          <Table className="rounded-xl overflow-hidden">
+            <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead>ID</TableHead>
-                <TableHead>First Name</TableHead>
-                <TableHead>Middle Name</TableHead>
-                <TableHead>Last Name</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Location ID</TableHead>
                 <TableHead>Gender</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
-              </TableHeader>
-            <TableBody>
+            </TableHeader>
+            <TableBody className="[&>tr:nth-child(odd)]:bg-muted/20">
               {users.map((user: any) => (
                 <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
+                  <TableCell>
+                    {user.id}
+                  </TableCell>
                   <TableCell>
                     {editUserId === user.id ? (
-                      <Input 
-                        value={editData.fname} 
-                        onChange={e => setEditData({ ...editData, fname: e.target.value })} 
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="First"
+                          value={editData.fname ?? ""}
+                          onChange={(e) => setEditData({ ...editData, fname: e.target.value })}
+                        />
+                        <Input
+                          placeholder="Middle"
+                          value={editData.mname ?? ""}
+                          onChange={(e) => setEditData({ ...editData, mname: e.target.value })}
+                        />
+                        <Input
+                          placeholder="Last"
+                          value={editData.lname ?? ""}
+                          onChange={(e) => setEditData({ ...editData, lname: e.target.value })}
+                        />
+                      </div>
                     ) : (
-                      user.fname
+                      `${user.fname ?? ''}${user.mname ? ' ' + user.mname : ''}${user.lname ? ' ' + user.lname : ''}`.trim()
                     )}
                   </TableCell>
                   <TableCell>
                     {editUserId === user.id ? (
-                      <Input 
-                        value={editData.mname} 
-                        onChange={e => setEditData({ ...editData, mname: e.target.value })} 
-                      />
-                    ) : (
-                      user.mname
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editUserId === user.id ? (
-                      <Input 
-                        value={editData.lname} 
-                        onChange={e => setEditData({ ...editData, lname: e.target.value })} 
-                      />
-                    ) : (
-                      user.lname
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editUserId === user.id ? (
-                      <Input 
-                        value={editData.type} 
-                        onChange={e => setEditData({ ...editData, type: e.target.value })} 
+                      <Input
+                        value={editData.type}
+                        onChange={(e) => setEditData({ ...editData, type: e.target.value })}
                       />
                     ) : (
                       user.type
@@ -161,10 +169,10 @@ export default function AdminUserManagement() {
                   </TableCell>
                   <TableCell>
                     {editUserId === user.id ? (
-                      <Input 
+                      <Input
                         type="number"
-                        value={editData.worksAt} 
-                        onChange={e => setEditData({ ...editData, worksAt: parseInt(e.target.value) })} 
+                        value={editData.worksAt}
+                        onChange={(e) => setEditData({ ...editData, worksAt: parseInt(e.target.value) })}
                       />
                     ) : (
                       user.worksAt
@@ -172,31 +180,9 @@ export default function AdminUserManagement() {
                   </TableCell>
                   <TableCell>
                     {editUserId === user.id ? (
-                      <Input 
-                        type="number"
-                        value={editData.allowedHours} 
-                        onChange={e => setEditData({ ...editData, allowedHours: parseInt(e.target.value) })} 
-                      />
-                    ) : (
-                      user.allowedHours
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editUserId === user.id ? (
-                      <Input 
-                        type="number"
-                        value={editData.allowedPaidLeaves} 
-                        onChange={e => setEditData({ ...editData, allowedPaidLeaves: parseInt(e.target.value) })} 
-                      />
-                    ) : (
-                      user.allowedPaidLeaves
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editUserId === user.id ? (
-                      <Input 
-                        value={editData.gender} 
-                        onChange={e => setEditData({ ...editData, gender: e.target.value })} 
+                      <Input
+                        value={editData.gender}
+                        onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
                       />
                     ) : (
                       user.gender
@@ -204,9 +190,9 @@ export default function AdminUserManagement() {
                   </TableCell>
                   <TableCell>
                     {editUserId === user.id ? (
-                      <Input 
-                        value={editData.phone} 
-                        onChange={e => setEditData({ ...editData, phone: e.target.value })} 
+                      <Input
+                        value={editData.phone}
+                        onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
                       />
                     ) : (
                       user.phone
@@ -216,33 +202,25 @@ export default function AdminUserManagement() {
                     <div className="flex gap-2">
                       {editUserId === user.id ? (
                         <>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             onClick={handleSave}
                             disabled={updateUserMutation.isPending}
                           >
                             {updateUserMutation.isPending ? "Saving..." : "Save"}
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => setEditUserId(null)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => setEditUserId(null)}>
                             Cancel
                           </Button>
                         </>
                       ) : (
                         <>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => handleEdit(user)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(user)}>
                             Edit
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="destructive" 
+                          <Button
+                            size="sm"
+                            variant="destructive"
                             onClick={() => {
                               if (confirm(`Are you sure you want to delete ${user.fname} ${user.lname}?`)) {
                                 deleteUserMutation.mutate(user.id);

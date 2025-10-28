@@ -108,6 +108,28 @@
   }
 }
 
+@layer components {
+  /* Display font helper (Plus Jakarta Sans loaded in index.html) */
+  .font-display {
+    font-family: 'Plus Jakarta Sans', var(--font-sans);
+  }
+
+  /* Reusable glassmorphism card */
+  .glass {
+    /* Avoid slash-opacity on CSS variable colors like bg-card/60; use solid bg-card in dark mode */
+    @apply bg-white/70 dark:bg-card backdrop-blur-md border border-white/40 dark:border-white/10 shadow-lg;
+  }
+
+  .card-elevated {
+    @apply rounded-2xl glass;
+  }
+
+  /* Fancy gradient title */
+  .title-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-indigo-700 to-blue-600 dark:from-slate-100 dark:via-indigo-300 dark:to-blue-300;
+  }
+}
+
 /* Custom status badge styles */
 .status-badge {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;

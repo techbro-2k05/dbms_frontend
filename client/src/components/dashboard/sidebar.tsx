@@ -37,14 +37,21 @@ export default function Sidebar({ user }: SidebarProps) {
   let navigation: NavItem[] = [];
   if (user.type === "MEMBER") {
     navigation = [
-      { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard", current: true },
+      { name: "Dashboard", icon: LayoutDashboard, href: "/worker-dashboard", current: true },
       { name: "Leave Request", icon: CalendarX, href: "/leave-request" },
       { name: "Wage", icon: BarChart3, href: "/wage" },
       // { name: "Settings", icon: Settings, href: // "/settings" },
     ];
-  } else if (user.type === "ADMIN" || user.type === "MANAGER") {
+  } else if (user.type === "ADMIN") {
     navigation = [
-      { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard", current: true },
+      { name: "Dashboard", icon: LayoutDashboard, href: "/admin-dashboard", current: true },
+      { name: "Leave Approval", icon: CalendarX, href: "/leave-approval" },
+      { name: "Add User", icon: Users, href: "/add-user" },
+      // { name: "Settings", icon: Settings, href: "/settings" },
+    ];
+  } else if (user.type === "MANAGER") {
+    navigation = [
+      { name: "Dashboard", icon: LayoutDashboard, href: "/manager-dashboard", current: true },
       { name: "Leave Approval", icon: CalendarX, href: "/leave-approval" },
       { name: "Edit User Details", icon: Users, href: "/edit-user" },
       // { name: "Settings", icon: Settings, href: "/setti// ngs" },

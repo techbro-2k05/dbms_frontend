@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import api from "@/services/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { queryClient } from "@/lib/queryClient";
 import {
   Form,
   FormField,
@@ -30,11 +32,24 @@ type FormValues = {
 };
 
 const ROLE_OPTIONS = [
-  { label: "Role A", value: 1 },
-  { label: "Role B", value: 2 },
-  { label: "Role C", value: 3 },
-  { label: "Role D", value: 4 },
-  // ... add more roles as integers
+  { label: "MANAGER", value: 1 },
+  { label: "ELECTRICIAN", value: 2 },
+  { label: "CARPENTER", value: 3 },
+  { label: "PLUMBER", value: 4 },
+  { label: "SECURITY_GUARD", value: 5 },
+  { label: "CLEANER", value: 6 },
+  { label: "RECEPTIONIST", value: 7 },
+  { label: "SUPERVISOR", value: 8 },
+  { label: "TECHNICIAN", value: 9 },
+];
+
+// Location dictionary mapped to DB IDs (1..5)
+const LOCATION_OPTIONS = [
+  { value: 1, label: "12A, Maple Street, Mumbai 400001" },
+  { value: 2, label: "7B, Oak Avenue, Pune 411001" },
+  { value: 3, label: "101, Cedar Lane, Bengaluru 560001" },
+  { value: 4, label: "45, Pine Road, Chennai 600001" },
+  { value: 5, label: "9C, Birch Boulevard, Kolkata 700001" },
 ];
 
 export default function AddUserForm() {
@@ -74,20 +89,35 @@ export default function AddUserForm() {
         feasibleRoles: values.feasibleRoles || [],
       };
 
-      // Send POST request to /members endpoint
-      const response = await api.post('/members', payload);
+  // Send POST request to /members endpoint
+  const response = await api.post('/members', payload, { withCredentials: true });
+  const created = response.data;
       
       toast({
         title: "Success",
         description: "User created successfully!",
       });
       
+      // Optimistically merge into cached list so admin dashboard shows it immediately
+      queryClient.setQueryData(["/members"], (old: any) => {
+        if (Array.isArray(old)) {
+          // Avoid duplicates if navigating back (id check)
+          const exists = old.some((u: any) => u.id === created?.id);
+          return exists ? old : [created, ...old];
+        }
+        return created ? [created] : old;
+      });
+
+      // Also invalidate and refetch in background to stay authoritative
+      queryClient.invalidateQueries({ queryKey: ["/members"] });
+      queryClient.refetchQueries({ queryKey: ["/members"] });
+
       form.reset();
       
       // Optional: Redirect back to admin dashboard or user list
       setTimeout(() => {
         setLocation("/admin-dashboard");
-      }, 1500);
+      }, 800);
       
     } catch (error: any) {
       console.error("Create user failed:", error);
@@ -108,27 +138,27 @@ export default function AddUserForm() {
 
     <div className="absolute top-4 right-4 z-10">
       <Button asChild variant="outline" className="text-sm">
-      <a href="/admin-dashboard">
-                        &larr; Back
-                    </a>
-                </Button>
+        <a href="/admin-dashboard">&larr; Back</a>
+      </Button>
     </div>
-    <div className="flex justify-center items-start md:py-10 min-h-screen p-4 bg-white  ">
-      <Card className="w-full max-w-lg shadow-2xl"> 
-        <CardHeader>
-          <CardTitle>Add New User</CardTitle>
+
+    <div className="flex justify-center items-start md:py-10 min-h-screen p-4 bg-gradient-to-br from-slate-50 via-indigo-50/60 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
+      <Card className="w-full max-w-3xl card-elevated"> 
+        <CardHeader className="pb-4">
+          <CardTitle className="font-display text-3xl title-gradient">Add New User</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
                 control={form.control}
                 name="fname"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input {...field} required />
+                      <Input {...field} required placeholder="John" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +171,7 @@ export default function AddUserForm() {
                   <FormItem>
                     <FormLabel>Middle Name</FormLabel>
                     <FormControl>
-                      <Input {...field} required />
+                      <Input {...field} placeholder="A." />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -154,7 +184,7 @@ export default function AddUserForm() {
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input {...field} required />
+                      <Input {...field} required placeholder="Doe" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -166,9 +196,18 @@ export default function AddUserForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type</FormLabel>
-                    <FormControl>
-                      <Input {...field} required />
-                    </FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ADMIN">ADMIN</SelectItem>
+                        <SelectItem value="MANAGER">MANAGER</SelectItem>
+                        <SelectItem value="MEMBER">MEMBER</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -191,10 +230,24 @@ export default function AddUserForm() {
                 name="worksAt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>worksAt</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} required />
-                    </FormControl>
+                    <FormLabel>Location</FormLabel>
+                    <Select
+                      value={field.value && field.value > 0 ? String(field.value) : undefined}
+                      onValueChange={(val) => field.onChange(Number(val))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a location" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {LOCATION_OPTIONS.map((loc) => (
+                          <SelectItem key={loc.value} value={String(loc.value)}>
+                            {loc.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -204,7 +257,7 @@ export default function AddUserForm() {
                 name="allowedPaidLeaves"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>allowedPaidLeaves</FormLabel>
+                    <FormLabel>Allowed Paid Leaves</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} required />
                     </FormControl>
@@ -217,7 +270,7 @@ export default function AddUserForm() {
                 name="allowedHours"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>allowedHours</FormLabel>
+                    <FormLabel>Allowed Hours</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} required />
                     </FormControl>
@@ -230,10 +283,18 @@ export default function AddUserForm() {
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>gender</FormLabel>
-                    <FormControl>
-                      <Input {...field} required />
-                    </FormControl>
+                    <FormLabel>Gender</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="MALE">MALE</SelectItem>
+                        <SelectItem value="FEMALE">FEMALE</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -255,7 +316,7 @@ export default function AddUserForm() {
                 control={form.control}
                 name="feasibleRoles" // Must match the field name in your form schema
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem className="flex flex-col md:col-span-2">
                     <FormLabel>Feasible Roles</FormLabel>
                     <FormControl>
                       <MultiSelect
@@ -271,9 +332,13 @@ export default function AddUserForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Adding..." : "Add User"}
-              </Button>
+              </div>
+
+              <div className="pt-2">
+                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? "Adding..." : "Add User"}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>

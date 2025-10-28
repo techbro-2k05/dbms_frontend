@@ -8,16 +8,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-<<<<<<< Updated upstream
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Factory } from "lucide-react";
-import { UserService } from "@/services/api";
-import { Navigate } from 'react-router-dom';
-=======
 import { Factory } from "lucide-react";
 import { useAuth } from "@/hooks/AuthContext";
 import { useToast } from "@/hooks/use-toast";
->>>>>>> Stashed changes
 const loginSchema = z.object({
    id: z.coerce.number({
       required_error: "ID is required", // Use required_error for empty/missing
@@ -60,36 +53,6 @@ export default function AuthPage() {
       password: "",
     },
   });
-<<<<<<< Updated upstream
-  if (user) {
-    return <Redirect to="/" />;
-  }
-  const onLogin = (data: LoginData) => {
-    loginMutation.mutate(data);
-  };
-  const onSubmit= async(values: loginValues)=>{
-     try {
-          // The number input issue must be fixed on the field level as shown in the previous answer.
-          // Assuming you will implement the custom onChange logic for number fields later.
-          const payload = {
-            is:values.id,
-            password: values.password?.trim(),
-          };
-          await UserService.create(payload);
-          alert("Signed in successfully");
-          return <Navigate to="/" replace={true} />;
-        } catch (error: any) {
-          console.error("Create user failed:", error);
-          const msg =
-            error?.response?.data?.message || error?.message || "Unknown error";
-          alert("Failed to create user: " + msg);
-        }
-      };
-  // const onRegister = (data: RegisterData) => {
-  //   const { confirmPassword, ...registerData } = data;
-  //   registerMutation.mutate(registerData);
-  // };
-=======
 
   const onSubmit = async (values: loginValues) => {
     try {
@@ -126,7 +89,6 @@ export default function AuthPage() {
       });
     }
   };
->>>>>>> Stashed changes
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex">
@@ -185,11 +147,7 @@ export default function AuthPage() {
                         )}
                       />
                       <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
-<<<<<<< Updated upstream
-                        {loginForm.formState.isSubmitting ? "Adding..." : "Add User"}
-=======
                         {loginForm.formState.isSubmitting ? "logging in..." : "login"}
->>>>>>> Stashed changes
                       </Button>
                     </form>
                   </Form>
