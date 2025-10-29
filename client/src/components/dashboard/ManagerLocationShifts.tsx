@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,29 @@ export default function ManagerLocationShifts({ worksAt }: { worksAt: number }) 
     return allShifts.filter((s: any) => s?.locationId === worksAt);
   }, [allShifts, worksAt]);
 
+  // Fetch existing assignments for each shift so counts/details persist after refresh
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!shifts || shifts.length === 0) return;
+        const pairs = await Promise.all(
+          shifts.map(async (s: any) => {
+            const list = await ShiftAssignmentsApi.listByShift(Number(s.id));
+            return [Number(s.id), list] as const;
+          })
+        );
+        if (cancelled) return;
+        const map: Record<number, any[]> = {};
+        for (const [id, list] of pairs) map[id] = list;
+        setAssignmentsByShift(map);
+      } catch (e) {
+        console.warn("Failed to prefetch assignments for shifts", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [shifts]);
+
   if (isLoading) return <div className="text-muted-foreground">Loading shifts…</div>;
   if (!shifts.length) return <div className="text-muted-foreground">No shifts created for your location yet.</div>;
 
@@ -86,9 +109,9 @@ export default function ManagerLocationShifts({ worksAt }: { worksAt: number }) 
           })
           .map((s: any) => {
             const status = getStatus(s);
-            const assigned = assignmentsByShift[s.id]?.length || 0;
+            const activeAssigned = (assignmentsByShift[s.id] || []).filter((a: any) => a?.attendance !== "LEAVE").length;
             const reqTotal = requiredTotal(s);
-            const disableAllot = typeof reqTotal === "number" ? assigned >= reqTotal : false;
+            const disableAllot = typeof reqTotal === "number" ? activeAssigned >= reqTotal : false;
             return (
               <div key={s.id} className="p-4 border rounded-xl bg-background/60 dark:bg-card ring-1 ring-black/5 cursor-pointer hover:bg-background/70 transition" onClick={() => openDetails(s)}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -117,8 +140,8 @@ export default function ManagerLocationShifts({ worksAt }: { worksAt: number }) 
                   <span className="inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {s.day}</span>
                   <span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {s.startTime?.slice(0, 8)} - {s.endTime?.slice(0, 8)}</span>
                 </div>
-                {assigned > 0 && (
-                  <div className="mt-2 text-xs text-muted-foreground">Assigned {assigned}{typeof reqTotal === 'number' ? ` / ${reqTotal}` : ''}</div>
+                {activeAssigned > 0 && (
+                  <div className="mt-2 text-xs text-muted-foreground">Assigned {activeAssigned}{typeof reqTotal === 'number' ? ` / ${reqTotal}` : ''}</div>
                 )}
               </div>
             );

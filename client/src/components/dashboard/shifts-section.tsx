@@ -1,57 +1,84 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Briefcase, Settings, Wrench } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Clock, MapPin } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
 import { useAuth } from "@/hooks/AuthContext";
+import { ShiftsApi } from "@/services/shifts";
+import { locationLabel, roleLabel } from "./shift-constants";
+import { ShiftAssignmentsApi, type ShiftAssignmentDto } from "@/services/shiftAssignments";
 
 export default function ShiftsSection() {
   const { user } = useAuth();
-  
+  const isMember = user?.type === "MEMBER";
+
+  // Fetch shifts for the logged-in member
   const { data: shifts = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/shifts"],
+    queryKey: ["/shifts/member", user?.id],
+    queryFn: () => (isMember && user?.id ? ShiftsApi.listForMember(Number(user.id)) : Promise.resolve([])),
+    enabled: Boolean(isMember && user?.id),
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "scheduled":
-      case "upcoming":
-        return "bg-blue-100 text-blue-800";
-      case "completed":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-orange-100 text-orange-800";
+  // Fetch the current member's assignment (role + attendance) for each shift
+  const [myAssignmentsByShift, setMyAssignmentsByShift] = React.useState<Record<number, ShiftAssignmentDto | null>>({});
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!isMember || !user?.id || !Array.isArray(shifts) || shifts.length === 0) return;
+        const pairs = await Promise.all(
+          shifts.map(async (s: any) => {
+            try {
+              const list = await ShiftAssignmentsApi.listByShift(Number(s.id));
+              const mine = list.find((a) => Number(a.memberId) === Number(user.id)) || null;
+              return [Number(s.id), mine] as const;
+            } catch {
+              return [Number(s.id), null] as const;
+            }
+          })
+        );
+        if (cancelled) return;
+        const map: Record<number, ShiftAssignmentDto | null> = {};
+        for (const [id, mine] of pairs) map[id] = mine;
+        setMyAssignmentsByShift(map);
+      } catch (e) {
+        console.warn("Failed to load member assignments for shifts", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isMember, user?.id, JSON.stringify(shifts)]);
+
+  const getStatus = (shift: any) => {
+    try {
+      const start = new Date(`${shift.day}T${(shift.startTime || '').slice(0,8)}`);
+      const end = new Date(`${shift.day}T${(shift.endTime || '').slice(0,8)}`);
+      const now = new Date();
+      if (now < start) return { key: "upcoming", label: "Yet to start", color: "bg-sky-100 text-sky-700" } as const;
+      if (now >= start && now <= end) return { key: "ongoing", label: "Ongoing", color: "bg-emerald-100 text-emerald-700" } as const;
+      return { key: "finished", label: "Finished", color: "bg-zinc-100 text-zinc-700" } as const;
+    } catch {
+      return { key: "unknown", label: "—", color: "bg-zinc-100 text-zinc-700" } as const;
     }
   };
 
-  const getShiftIcon = (department: string) => {
-    switch (department?.toLowerCase()) {
-      case "production":
-        return <Briefcase className="w-5 h-5 text-primary-foreground" />;
-      case "quality control":
-        return <Settings className="w-5 h-5 text-accent-foreground" />;
-      case "maintenance":
-        return <Wrench className="w-5 h-5 text-secondary-foreground" />;
-      default:
-        return <Briefcase className="w-5 h-5 text-primary-foreground" />;
-    }
-  };
+  const [statusFilter, setStatusFilter] = React.useState<"all" | "upcoming" | "ongoing" | "finished">("all");
 
   return (
     <Card data-testid="shifts-section">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle data-testid="shifts-title">
-            {user?.type === "ADMIN" ? "Today's Shifts" : "My Upcoming Shifts"}
-          </CardTitle>
-          {user?.type === "MEMBER" && (
-            <Button variant="link" size="sm" data-testid="button-view-all-shifts">
-              View All
-            </Button>
+          <CardTitle data-testid="shifts-title">{isMember ? "My Shifts" : "Shifts"}</CardTitle>
+          {isMember && (
+            <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="upcoming">Yet to start</TabsTrigger>
+                <TabsTrigger value="ongoing">Ongoing</TabsTrigger>
+                <TabsTrigger value="finished">Finished</TabsTrigger>
+              </TabsList>
+            </Tabs>
           )}
         </div>
       </CardHeader>
@@ -74,36 +101,34 @@ export default function ShiftsSection() {
           </div>
         ) : shifts && shifts.length > 0 ? (
           <div className="space-y-4" data-testid="shifts-list">
-            {shifts.slice(0, 3).map((shift: any) => (
-              <div key={shift.id} className="flex items-center justify-between p-4 border border-border rounded-lg" data-testid={`shift-${shift.id}`}>
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                    {getShiftIcon(shift.department)}
+            {shifts
+              .filter((s: any) => {
+                if (statusFilter === "all") return true;
+                const st = getStatus(s).key;
+                return st === statusFilter;
+              })
+              .map((shift: any) => {
+                const status = getStatus(shift);
+                const myAssign = myAssignmentsByShift[Number(shift.id)] || null;
+                return (
+                  <div key={shift.id} className="flex items-center justify-between p-4 border border-border rounded-lg" data-testid={`shift-${shift.id}`}>
+                    <div className="space-y-1">
+                      <h3 className="font-medium text-foreground" data-testid={`shift-title-${shift.id}`}>{shift.title}</h3>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="inline-flex items-center gap-1"><Calendar className="w-4 h-4" /> {shift.day}</span>
+                        <span className="inline-flex items-center gap-1"><Clock className="w-4 h-4" /> {shift.startTime?.slice(0,8)} - {shift.endTime?.slice(0,8)}</span>
+                        <span className="inline-flex items-center gap-1"><MapPin className="w-4 h-4" /> #{shift.locationId}{locationLabel(shift.locationId) ? ` — ${locationLabel(shift.locationId)}` : ''}</span>
+                      </div>
+                      {myAssign && (
+                        <div className="text-xs text-muted-foreground">
+                          Role: {roleLabel(myAssign.roleId)} • Attendance: {myAssign.attendance}
+                        </div>
+                      )}
+                    </div>
+                    <Badge className={status.color} data-testid={`shift-status-${shift.id}`}>{status.label}</Badge>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-foreground" data-testid={`shift-title-${shift.id}`}>
-                      {shift.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground" data-testid={`shift-time-${shift.id}`}>
-                      {format(new Date(shift.startTime), "HH:mm")} - {format(new Date(shift.endTime), "HH:mm")}
-                    </p>
-                    {user?.type === "ADMIN" && shift.assignedUser && (
-                      <p className="text-xs text-muted-foreground" data-testid={`shift-employee-${shift.id}`}>
-                        Assigned: {shift.assignedUser.name}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <Badge className={getStatusColor(shift.status)} data-testid={`shift-status-${shift.id}`}>
-                    {shift.status}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground mt-1" data-testid={`shift-department-${shift.id}`}>
-                    {shift.department}
-                  </p>
-                </div>
-              </div>
-            ))}
+                );
+              })}
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground" data-testid="no-shifts">

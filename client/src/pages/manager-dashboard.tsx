@@ -5,6 +5,7 @@ import StatsCards from "@/components/dashboard/stats-cards";
 import AnalyticsSection from "@/components/dashboard/analytics-section";
 import NewShiftForm from "@/components/dashboard/new-shift-form";
 import AttendanceOverview from "@/components/dashboard/attendance-overview";
+import LeaveApprovals from "@/components/dashboard/leave-approvals";
 
 export default function ManagerDashboard() {
   const { user } = useAuth();
@@ -29,6 +30,7 @@ export default function ManagerDashboard() {
             </div>
             <div className="space-y-6">
               <AttendanceOverview /> {/* Attendance for manager's location */}
+              <LeaveApprovals /> {/* Pending leave requests with approve/reject */}
             </div>
           </div>
         </main>

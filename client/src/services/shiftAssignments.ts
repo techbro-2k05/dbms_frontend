@@ -8,6 +8,10 @@ export type ShiftAssignmentDto = {
 };
 
 export const ShiftAssignmentsApi = {
+  async listByShift(shiftId: number): Promise<ShiftAssignmentDto[]> {
+    const res = await api.get(`/shift_assignments/${shiftId}`, { withCredentials: true });
+    return res.data;
+  },
   async autoAssign(shiftId: number): Promise<ShiftAssignmentDto[]> {
     const res = await api.post(`/shift_assignments/${shiftId}/auto`, {}, { withCredentials: true });
     return res.data;

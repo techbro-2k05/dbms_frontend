@@ -15,6 +15,10 @@ export const ShiftsApi = {
     const res = await api.get("/shifts", { withCredentials: true });
     return res.data;
   },
+  async listForMember(memberId: number) {
+    const res = await api.get(`/shifts/member/${memberId}`, { withCredentials: true });
+    return res.data;
+  },
 
   async create(payload: CreateShiftPayload) {
     const res = await api.post("/shifts", payload, { withCredentials: true });

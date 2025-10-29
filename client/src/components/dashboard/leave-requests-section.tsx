@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/AuthContext";
 import LeaveRequestForm from "@/components/forms/leave-request-form";
 import { format } from "date-fns";
 
@@ -16,25 +17,11 @@ type LeaveRequestsSectionProps = {
 };
 
 export default function LeaveRequestsSection({ hideBackButton = false }: LeaveRequestsSectionProps) {
-  // const { user } = useAuth();
-  const user = {
-      id:1234,
-      fname: "aa",
-      mname: "bb",
-      lname: "cc",
-      type: "MANAGER",
-      phone:"",
-      gender: "MALE",//"MALE" or "FEMALE"
-      allowedPaidLeaves:0,
-      allowedHours: 0,
-      worksAt: 0,  
-      password: "admin123", // hash in production!
-      feasibleRoles:[],
-};
+  const { user } = useAuth();
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   
-  const { data: requests = [], isLoading } = useQuery({
+  const { data: requests = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/leave-requests"],
   });
 
@@ -86,7 +73,15 @@ export default function LeaveRequestsSection({ hideBackButton = false }: LeaveRe
     {!hideBackButton && (
       <div className="absolute top-4 right-4 z-10">
         <Button asChild variant="outline" className="text-sm">
-          <a href="/dashboard">&larr; Back</a>
+          <a href={
+            user?.type === "MEMBER"
+              ? "/worker-dashboard"
+              : user?.type === "MANAGER"
+              ? "/manager-dashboard"
+              : user?.type === "ADMIN"
+              ? "/admin-dashboard"
+              : "/dashboard"
+          }>&larr; Back</a>
         </Button>
       </div>
     )}
@@ -96,7 +91,7 @@ export default function LeaveRequestsSection({ hideBackButton = false }: LeaveRe
           <CardTitle data-testid="leave-requests-title">
             {(user?.type === "ADMIN" || user?.type ==="MANAGER") ? "Leave Requests" : "My Leave Requests"}
           </CardTitle>
-          {user?.type === "worker" && (
+          {user?.type === "MEMBER" && (
             <Dialog open={showForm} onOpenChange={setShowForm}>
               <DialogTrigger asChild>
                 <Button data-testid="button-new-request">New Request</Button>
@@ -122,21 +117,21 @@ export default function LeaveRequestsSection({ hideBackButton = false }: LeaveRe
               <TableHeader>
                 <TableRow>
                   <TableHead>
-                    {user?.type === "admin" ? "Employee" : "Type"}
+                    {user?.type === "ADMIN" ? "Employee" : "Type"}
                   </TableHead>
                   <TableHead>
-                    {user?.type === "admin" ? "Leave Type" : "Dates"}
+                    {user?.type === "ADMIN" ? "Leave Type" : "Dates"}
                   </TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Status</TableHead>
-                  {user?.type === "admin" && <TableHead>Action</TableHead>}
+                  {user?.type === "ADMIN" && <TableHead>Action</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {requests.slice(0, 5).map((request: any) => (
                   <TableRow key={request.id} data-testid={`request-${request.id}`}>
                     <TableCell>
-                      {user?.type === "admin" ? (
+                      {user?.type === "ADMIN" ? (
                         <span className="font-medium" data-testid={`request-employee-${request.id}`}>
                           {request.user?.name || "Unknown"}
                         </span>
@@ -147,7 +142,7 @@ export default function LeaveRequestsSection({ hideBackButton = false }: LeaveRe
                       )}
                     </TableCell>
                     <TableCell>
-                      {user?.type === "admin" ? (
+                      {user?.type === "ADMIN" ? (
                         <span className="text-muted-foreground" data-testid={`request-admin-type-${request.id}`}>
                           {request.type}
                         </span>
@@ -165,7 +160,7 @@ export default function LeaveRequestsSection({ hideBackButton = false }: LeaveRe
                         {request.status}
                       </Badge>
                     </TableCell>
-                    {user?.type === "admin" && (
+                    {user?.type === "ADMIN" && (
                       <TableCell>
                         {request.status === "pending" ? (
                           <div className="flex space-x-2">
